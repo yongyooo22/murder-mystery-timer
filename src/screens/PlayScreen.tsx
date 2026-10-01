@@ -44,15 +44,17 @@ export function PlayScreen() {
   if (!game) {
     return (
       <div className="screen">
-        <EmptyState
-          icon="clock"
-          title="진행 중인 게임이 없어요"
-          actions={
-            <Button variant="primary" size="lg" onClick={() => navigate({ name: 'list' }, { replace: true })}>
-              시나리오 목록으로
-            </Button>
-          }
-        />
+        <main className="screen__body">
+          <EmptyState
+            icon="clock"
+            title="진행 중인 게임이 없어요"
+            actions={
+              <Button variant="primary" size="lg" onClick={() => navigate({ name: 'list' }, { replace: true })}>
+                시나리오 목록으로
+              </Button>
+            }
+          />
+        </main>
       </div>
     );
   }
@@ -205,7 +207,7 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
   const primary = PRIMARY[role];
 
   return (
-    <div className="screen play" data-tone={tone} data-paused={!running}>
+    <main className="screen play" data-tone={tone} data-paused={!running}>
       <header className="play-top">
         <div className="play-top__info">
           <p className="play-top__scenario">{game.scenarioName}</p>
@@ -424,7 +426,7 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
           수 없어요.
         </p>
       </ConfirmDialog>
-    </div>
+    </main>
   );
 }
 
