@@ -124,10 +124,10 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
               title="저장된 시나리오가 없어요"
               actions={
                 <>
-                  <Button variant="primary" icon="plus" onClick={() => navigate({ name: 'new' })}>
+                  <Button variant="primary" size="lg" icon="plus" onClick={() => navigate({ name: 'new' })}>
                     새로 만들기
                   </Button>
-                  <Button icon="template" onClick={showTemplates}>
+                  <Button size="lg" icon="template" onClick={showTemplates}>
                     템플릿 사용
                   </Button>
                 </>
@@ -153,7 +153,7 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
               tone="error"
               title="목록을 불러오지 못했어요"
               actions={
-                <Button icon="refresh" onClick={() => void refreshScenarios()}>
+                <Button size="lg" icon="refresh" onClick={() => void refreshScenarios()}>
                   다시 시도
                 </Button>
               }
@@ -337,7 +337,7 @@ function ResumeGame() {
           단계 · {stage.name} · {state}
         </p>
       </div>
-      <Button variant="primary" icon="play" onClick={() => navigate({ name: 'play' })}>
+      <Button variant="primary" size="lg" icon="play" onClick={() => navigate({ name: 'play' })}>
         이어가기
       </Button>
     </section>

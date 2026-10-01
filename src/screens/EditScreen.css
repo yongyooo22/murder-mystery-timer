@@ -384,3 +384,9 @@ body.is-dragging {
   flex: 0 0 auto;
   min-width: 128px;
 }
+
+/* 편집 화면에서는 잠깐 뜨는 알림이 아래 저장 영역을 가리지 않도록 위쪽에 띄운다. */
+body:has(.edit-screen) .toast-region {
+  top: calc(var(--safe-top) + 68px);
+  bottom: auto;
+}

@@ -102,7 +102,11 @@ export function useDragReorder(keys: string[], onMove: (from: number, to: number
       const elements = keysRef.current.map((k) => rows.current.get(k));
       if (from === -1 || elements.some((el) => !el)) return;
       event.preventDefault();
-      event.currentTarget.setPointerCapture(event.pointerId);
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // 포인터 캡처를 못 해도 손잡이 위에서 움직이는 동안은 동작한다.
+      }
       const rects = elements.map((el) => el!.getBoundingClientRect());
       info.current = {
         pointerId: event.pointerId,

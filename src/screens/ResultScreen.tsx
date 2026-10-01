@@ -3,7 +3,7 @@ import { EmptyState } from '../components/EmptyState';
 import { useScenarioList } from '../data/scenarioStore';
 import { useGameStore } from '../game/gameStore';
 import { useStartGame } from '../game/useStartGame';
-import { navigate } from '../lib/router';
+import { goBack } from '../lib/router';
 import { clockText, diffSentence, durationText, signedClockText, timeOfDayText } from '../lib/time';
 import './ResultScreen.css';
 
@@ -11,7 +11,8 @@ export function ResultScreen() {
   const { result } = useGameStore();
   const list = useScenarioList();
   const startGame = useStartGame();
-  const toList = () => navigate({ name: 'list' }, { replace: true });
+  // 결과 화면은 진행 화면을 대신한 기록이므로 한 칸 되돌리면 목록이다.
+  const toList = () => goBack({ name: 'list' });
 
   if (!result) {
     return (
@@ -21,7 +22,7 @@ export function ResultScreen() {
             icon="flag"
             title="표시할 진행 결과가 없어요"
             actions={
-              <Button variant="primary" onClick={toList}>
+              <Button variant="primary" size="lg" onClick={toList}>
                 시나리오 목록으로
               </Button>
             }

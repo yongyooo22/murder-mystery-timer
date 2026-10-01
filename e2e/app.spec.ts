@@ -288,3 +288,29 @@ test('진행 중인 게임은 목록 위에 보이고 이어갈 수 있다', asy
   await resume.getByRole('button', { name: '이어가기' }).click();
   await expect(page.getByRole('heading', { name: '소개' })).toBeVisible();
 });
+
+test('손잡이를 끌거나 화살표 키로 단계 순서를 바꾼다', async ({ page, request }) => {
+  const item = await createScenario(request, '순서 테스트', [
+    ['하나', 60],
+    ['둘', 60],
+    ['셋', 60],
+  ]);
+  await page.goto(`/#/edit/${item.id}`);
+  const handle = page.getByRole('button', { name: /^1번 단계 순서 바꾸기/ });
+  const box = (await handle.boundingBox())!;
+  const target = (await page.locator('.stage-row').nth(2).boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, target.y + target.height * 0.8, { steps: 12 });
+  await page.mouse.up();
+  await expect(page.getByLabel('1번 단계 이름')).toHaveValue('둘');
+  await expect(page.getByLabel('2번 단계 이름')).toHaveValue('셋');
+  await expect(page.getByLabel('3번 단계 이름')).toHaveValue('하나');
+
+  await page.getByRole('button', { name: /^3번 단계 순서 바꾸기/ }).focus();
+  await page.keyboard.press('ArrowUp');
+  await expect(page.getByLabel('2번 단계 이름')).toHaveValue('하나');
+
+  await page.getByRole('button', { name: '1번 단계 아래로 이동' }).click();
+  await expect(page.getByLabel('2번 단계 이름')).toHaveValue('둘');
+});

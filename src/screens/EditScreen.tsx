@@ -71,7 +71,7 @@ export function EditScreen({ scenarioId, templateKey }: EditScreenProps) {
             icon="alert"
             title="시나리오를 찾을 수 없어요"
             actions={
-              <Button variant="primary" onClick={() => navigate({ name: 'list' }, { replace: true })}>
+              <Button variant="primary" size="lg" onClick={() => navigate({ name: 'list' }, { replace: true })}>
                 시나리오 목록으로
               </Button>
             }
@@ -277,8 +277,26 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
     });
   };
 
+  // 아래 고정 영역의 높이: 초점이 간 입력칸이 그 뒤로 숨지 않게 하고(scroll-padding),
+  // 끌어서 옮길 때 자동 스크롤 기준으로도 쓴다.
+  const [barHeight, setBarHeight] = useState(0);
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+    const update = () => setBarHeight(keyboardOpen ? 0 : bar.offsetHeight);
+    update();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    observer?.observe(bar);
+    return () => observer?.disconnect();
+  }, [keyboardOpen]);
+  useEffect(() => {
+    document.documentElement.style.scrollPaddingBottom = barHeight ? `${barHeight + 16}px` : '';
+    return () => {
+      document.documentElement.style.scrollPaddingBottom = '';
+    };
+  }, [barHeight]);
+
   const dragKeys = draft.stages.map((s) => s.key);
-  const barHeight = keyboardOpen ? 0 : (barRef.current?.offsetHeight ?? 0);
   const { drag, registerRow, handleProps, rowStyle } = useDragReorder(dragKeys, moveStage, barHeight);
 
   /* ---------- 빠른 입력 ---------- */

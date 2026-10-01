@@ -61,6 +61,7 @@ export function Modal({
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   const dismissibleRef = useRef(dismissible);
+  const pressedBackdrop = useRef(false);
 
   useLayoutEffect(() => {
     onCloseRef.current = onClose;
@@ -118,10 +119,17 @@ export function Modal({
   if (!open) return null;
 
   return createPortal(
+    // 배경을 눌렀다 뗐을 때 닫는다. 누르는 순간 닫으면 손을 뗄 때 아래 화면의 버튼이 눌릴 수 있다.
     <div
       className={`modal-root modal-root--${variant}`}
       onPointerDown={(event) => {
-        if (event.target === event.currentTarget && dismissibleRef.current) onCloseRef.current();
+        pressedBackdrop.current = event.target === event.currentTarget;
+      }}
+      onClick={(event) => {
+        if (pressedBackdrop.current && event.target === event.currentTarget && dismissibleRef.current) {
+          onCloseRef.current();
+        }
+        pressedBackdrop.current = false;
       }}
     >
       <div

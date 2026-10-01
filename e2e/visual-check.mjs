@@ -18,6 +18,8 @@ const VIEWPORTS = {
   tabP: { width: 768, height: 1024 },
   tabL: { width: 1024, height: 768 },
   mLand: { width: 844, height: 390 },
+  seP: { width: 375, height: 667 },
+  smallLand: { width: 640, height: 360 },
 };
 
 const LONG_NAME = '비 오는 밤 외딴 산장에서 벌어진 의문의 연쇄 사건과 사라진 유언장의 비밀';
@@ -126,6 +128,12 @@ async function inspect(page, name) {
       const extra = el.classList.contains('switch') ? 10 : 0;
       if (r.width < 44 || r.height + extra < 44) {
         small.push(`${(el.getAttribute('aria-label') || el.textContent || el.tagName).trim().slice(0, 24)} ${Math.round(r.width)}x${Math.round(r.height)}`);
+      }
+    }
+    for (const el of document.querySelectorAll('.btn--primary')) {
+      const r = el.getBoundingClientRect();
+      if (r.height > 1 && r.height < 52 && r.bottom > 0 && r.top < window.innerHeight) {
+        small.push(`주요버튼 ${(el.textContent || '').trim().slice(0, 16)} ${Math.round(r.height)}px`);
       }
     }
     const overlaps = [];

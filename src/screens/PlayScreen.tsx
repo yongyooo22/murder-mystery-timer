@@ -48,7 +48,7 @@ export function PlayScreen() {
           icon="clock"
           title="진행 중인 게임이 없어요"
           actions={
-            <Button variant="primary" onClick={() => navigate({ name: 'list' }, { replace: true })}>
+            <Button variant="primary" size="lg" onClick={() => navigate({ name: 'list' }, { replace: true })}>
               시나리오 목록으로
             </Button>
           }
@@ -64,6 +64,7 @@ type PrimaryRole = 'pause' | 'resume' | 'next' | 'finish';
 type Tone = 'normal' | 'warn' | 'over';
 
 const TICK_MS = 250;
+const PRIMARY_LOCK_MS = 800;
 
 // 큰 숫자의 글자 칸 너비(em). 칸 너비를 고정해 숫자가 바뀌어도 흔들리지 않게 한다.
 const DIGIT_EM = 0.6;
@@ -138,15 +139,20 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
     });
   }, [game, now]);
 
-  /* 주요 버튼 역할이 ‘다음 단계 시작’으로 바뀐 직후의 잘못된 터치를 막는다. */
+  /*
+   * 주요 버튼의 역할이 ‘다음 단계 시작/게임 마치기’로 바뀌거나 거기서 다른 역할로 바뀐 직후에는
+   * 잠깐 누름을 무시한다. 시간이 끝나는 순간 일시정지를 누르려던 터치나 두 번 누름으로
+   * 의도하지 않은 단계 이동·일시정지가 일어나지 않게 하기 위해서다.
+   */
   const [primaryLocked, setPrimaryLocked] = useState(false);
   const prevRole = useRef(role);
   useEffect(() => {
-    const changedToAdvance = prevRole.current !== role && (role === 'next' || role === 'finish');
+    const before = prevRole.current;
     prevRole.current = role;
-    if (!changedToAdvance) return;
+    const advancing = (r: PrimaryRole) => r === 'next' || r === 'finish';
+    if (before === role || !(advancing(role) || advancing(before))) return;
     setPrimaryLocked(true);
-    const timer = window.setTimeout(() => setPrimaryLocked(false), 900);
+    const timer = window.setTimeout(() => setPrimaryLocked(false), PRIMARY_LOCK_MS);
     return () => window.clearTimeout(timer);
   }, [role]);
 

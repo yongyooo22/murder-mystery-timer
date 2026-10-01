@@ -329,6 +329,16 @@ body.is-playing .toast-region {
   gap: var(--play-gap);
 }
 
+/* 좁은 가로 화면에서도 라벨이 두 줄로 갈라지지 않게 */
+.play-controls .btn {
+  padding-left: var(--sp-3);
+  padding-right: var(--sp-3);
+}
+
+.play-controls .btn__label {
+  white-space: nowrap;
+}
+
 .play-primary.btn--xl {
   min-height: 64px;
 }
@@ -507,6 +517,8 @@ body.is-playing .toast-region {
 
   .play-controls .btn--lg {
     min-height: var(--tap-min);
+    gap: 6px;
+    font-size: var(--fs-15);
   }
 
   .play-primary.btn--xl {

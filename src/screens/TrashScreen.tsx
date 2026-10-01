@@ -115,7 +115,7 @@ export function TrashScreen() {
             tone="error"
             title="휴지통을 불러오지 못했어요"
             actions={
-              <Button variant="primary" icon="refresh" onClick={load}>
+              <Button variant="primary" size="lg" icon="refresh" onClick={load}>
                 다시 시도
               </Button>
             }
