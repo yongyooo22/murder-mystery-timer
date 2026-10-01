@@ -21,19 +21,30 @@ function getContext(): AudioContext | null {
 
 export function unlockAudio() {
   const ctx = getContext();
-  if (ctx && ctx.state === 'suspended') void ctx.resume().catch(() => {});
+  if (!ctx || ctx.state !== 'suspended') return;
+  void ctx.resume().catch(() => {});
+  // 일부 iOS 버전은 사용자 동작 안에서 실제로 소리를 한 번 내야 오디오가 풀린다(무음 1샘플).
+  try {
+    const source = ctx.createBufferSource();
+    source.buffer = ctx.createBuffer(1, 1, 22050);
+    source.connect(ctx.destination);
+    source.start(0);
+  } catch {
+    // 무시: 다음 사용자 동작에서 다시 시도한다.
+  }
 }
+
+// iOS Safari는 손을 뗄 때(touchend·click)를 사용자 동작으로 보므로 여러 이벤트에서 시도한다.
+const UNLOCK_EVENTS = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const;
 
 export function installAudioUnlock() {
   const unlock = () => {
     unlockAudio();
     if (context?.state === 'running') {
-      window.removeEventListener('pointerdown', unlock, true);
-      window.removeEventListener('keydown', unlock, true);
+      UNLOCK_EVENTS.forEach((type) => window.removeEventListener(type, unlock, true));
     }
   };
-  window.addEventListener('pointerdown', unlock, true);
-  window.addEventListener('keydown', unlock, true);
+  UNLOCK_EVENTS.forEach((type) => window.addEventListener(type, unlock, true));
 }
 
 function chime(ctx: AudioContext, frequency: number, start: number, duration: number, volume: number) {

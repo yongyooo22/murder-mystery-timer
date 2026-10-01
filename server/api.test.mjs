@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import http from 'node:http';
+import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { after, before, beforeEach, describe, test } from 'node:test';
@@ -278,5 +279,59 @@ describe('static files', () => {
     });
     assert.equal(status, 403);
     assert.doesNotMatch(body, /root:/);
+  });
+});
+
+describe('malformed requests', () => {
+  let ctx;
+  before(async () => {
+    ctx = await startServer();
+  });
+  after(async () => ctx.close());
+
+  test('bad path encoding and non-object bodies return 400', async () => {
+    const badPath = await new Promise((resolve, reject) => {
+      const req = http.request(`${ctx.base}/api/scenarios/%E0%A4%A`, (res) => {
+        res.resume();
+        res.on('end', () => resolve(res.statusCode));
+      });
+      req.on('error', reject);
+      req.end();
+    });
+    assert.equal(badPath, 400);
+    const { item } = (await ctx.call('POST', '/api/scenarios', validInput)).body;
+    assert.equal((await ctx.call('PATCH', `/api/scenarios/${item.id}`, 'null')).status, 400);
+    assert.equal((await ctx.call('POST', '/api/scenarios', '[1,2]')).status, 400);
+  });
+});
+
+describe('store consistency', () => {
+  test('a write that fails is never visible to readers', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'mt-store-'));
+    const file = path.join(dir, 'sub', 'scenarios.json');
+    const store = await openStore({ file, retentionDays: 30 });
+    await fs.rm(path.join(dir, 'sub'), { recursive: true });
+    const pending = store.create(validInput);
+    assert.equal(store.listActive().length, 0);
+    await assert.rejects(pending);
+    assert.equal(store.listActive().length, 0);
+  });
+});
+
+describe('static file errors', () => {
+  test('a file that cannot be opened does not crash the server', { timeout: 10_000 }, async () => {
+    const staticDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mt-static-'));
+    await fs.writeFile(path.join(staticDir, 'index.html'), '<!doctype html>');
+    // 소켓 파일은 stat은 통과하지만 열 때 실패한다(파일이 확인 직후 사라진 경우와 같은 상황).
+    const socketServer = net.createServer();
+    await new Promise((resolve) => socketServer.listen(path.join(staticDir, 'broken.js'), resolve));
+    const ctx = await startServer({ staticDir });
+    try {
+      await fetch(`${ctx.base}/broken.js`).catch(() => null);
+      assert.equal((await fetch(`${ctx.base}/api/health`)).status, 200);
+    } finally {
+      await ctx.close();
+      socketServer.close();
+    }
   });
 });

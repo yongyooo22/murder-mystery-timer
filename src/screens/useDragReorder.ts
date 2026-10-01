@@ -93,7 +93,13 @@ export function useDragReorder(keys: string[], onMove: (from: number, to: number
     [onMove, setDrag],
   );
 
-  useEffect(() => () => stopAutoScroll(), []);
+  useEffect(
+    () => () => {
+      stopAutoScroll();
+      document.body.classList.remove('is-dragging');
+    },
+    [],
+  );
 
   const handleProps = (key: string) => ({
     onPointerDown: (event: PointerEvent<HTMLElement>) => {

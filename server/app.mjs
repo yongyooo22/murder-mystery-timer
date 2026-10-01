@@ -1,5 +1,6 @@
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
+import { pipeline } from 'node:stream';
 import { StoreError } from './store.mjs';
 import { ValidationError, validateName, validateRev, validateScenarioInput } from './validate.mjs';
 
@@ -53,11 +54,16 @@ async function readJsonBody(req) {
     chunks.push(chunk);
   }
   if (size === 0) return {};
+  let body;
   try {
-    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
   } catch {
     throw new HttpError(400, 'bad_json', '요청 형식이 올바르지 않아요.');
   }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    throw new HttpError(400, 'bad_json', '요청 형식이 올바르지 않아요.');
+  }
+  return body;
 }
 
 /**
@@ -156,8 +162,13 @@ export function createApp({ store, staticDir, retentionDays, corsOrigin = '' }) 
       return sendError(res, 405, 'method_not_allowed', '지원하지 않는 요청이에요.');
     }
     const [, pattern, handler] = route;
-    const params = pathname.match(pattern).slice(1).map(decodeURIComponent);
     try {
+      let params;
+      try {
+        params = pathname.match(pattern).slice(1).map(decodeURIComponent);
+      } catch {
+        throw new HttpError(400, 'bad_path', '요청 주소가 올바르지 않아요.');
+      }
       const { status, body } = await handler(req, ...params);
       if (status === 204) {
         res.writeHead(204, { 'Cache-Control': 'no-store' });
@@ -222,7 +233,10 @@ export function createApp({ store, staticDir, retentionDays, corsOrigin = '' }) 
       'Cache-Control': isHashedAsset ? 'public, max-age=31536000, immutable' : 'no-cache',
     });
     if (req.method === 'HEAD') return res.end();
-    createReadStream(file).pipe(res);
+    // 확인한 뒤 파일이 사라지는 경우(배포 중 다시 빌드 등)에도 서버가 멈추지 않게 오류를 처리한다.
+    pipeline(createReadStream(file), res, (error) => {
+      if (error) res.destroy();
+    });
   }
 
   return async function handle(req, res) {

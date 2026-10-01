@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Button } from '../components/Button';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
@@ -148,15 +148,21 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
    */
   const [primaryLocked, setPrimaryLocked] = useState(false);
   const prevRole = useRef(role);
-  useEffect(() => {
+  const lockedUntil = useRef(0);
+  const unlockTimer = useRef<number | undefined>(undefined);
+  // 화면에 새 역할이 그려지기 전에(useLayoutEffect) 잠가야 그 사이의 터치도 막을 수 있다.
+  useLayoutEffect(() => {
     const before = prevRole.current;
     prevRole.current = role;
     const advancing = (r: PrimaryRole) => r === 'next' || r === 'finish';
     if (before === role || !(advancing(role) || advancing(before))) return;
+    lockedUntil.current = Date.now() + PRIMARY_LOCK_MS;
     setPrimaryLocked(true);
-    const timer = window.setTimeout(() => setPrimaryLocked(false), PRIMARY_LOCK_MS);
-    return () => window.clearTimeout(timer);
+    // 잠금 해제 타이머는 역할이 다시 바뀌어도 취소하지 않는다(새 잠금이면 새로 건다).
+    window.clearTimeout(unlockTimer.current);
+    unlockTimer.current = window.setTimeout(() => setPrimaryLocked(false), PRIMARY_LOCK_MS);
   }, [role]);
+  useEffect(() => () => window.clearTimeout(unlockTimer.current), []);
 
   const act = (change: (g: GameState, t: number) => GameState, message?: string) => {
     updateGame(change);
@@ -174,7 +180,7 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
     running ? act((g, t) => pause(g, t), '일시정지했어요.') : act((g, t) => resume(g, t), '다시 진행해요.');
 
   const onPrimary = () => {
-    if (primaryLocked) return;
+    if (Date.now() < lockedUntil.current) return;
     if (role === 'pause' || role === 'resume') togglePause();
     else if (role === 'next') goNext();
     else finish();

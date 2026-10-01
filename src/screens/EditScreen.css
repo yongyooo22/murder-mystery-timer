@@ -206,6 +206,10 @@ body.is-dragging {
   border-style: dashed;
 }
 
+.stages-error {
+  margin-top: var(--sp-3);
+}
+
 /* ---------- 빠른 입력 ---------- */
 
 .quick {

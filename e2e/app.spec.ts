@@ -310,7 +310,91 @@ test('손잡이를 끌거나 화살표 키로 단계 순서를 바꾼다', async
   await page.getByRole('button', { name: /^3번 단계 순서 바꾸기/ }).focus();
   await page.keyboard.press('ArrowUp');
   await expect(page.getByLabel('2번 단계 이름')).toHaveValue('하나');
+  // 손잡이에 초점이 남아 화살표 키로 계속 옮길 수 있다.
+  await page.keyboard.press('ArrowUp');
+  await expect(page.getByLabel('1번 단계 이름')).toHaveValue('하나');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByLabel('3번 단계 이름')).toHaveValue('하나');
+  await page.keyboard.press('ArrowUp');
 
   await page.getByRole('button', { name: '1번 단계 아래로 이동' }).click();
   await expect(page.getByLabel('2번 단계 이름')).toHaveValue('둘');
+});
+
+test('시간 초과 중 일시정지 → +1분 → 바로 다음 단계로 가도 주요 버튼이 잠긴 채 남지 않는다', async ({ page, request }) => {
+  await createScenario(request, '잠금 테스트', [
+    ['하나', 60],
+    ['둘', 120],
+  ]);
+  await startClock(page);
+  await page.goto('/');
+  await page.clock.pauseAt(T0 + 5_000);
+  await page.getByRole('button', { name: '‘잠금 테스트’ 열기' }).click();
+  await page.getByRole('button', { name: '게임 시작' }).click();
+  await page.clock.runFor(61_000);
+  await page.clock.runFor(1_000);
+  await expect(page.locator('.play-status__label')).toHaveText('시간 초과');
+
+  await page.locator('.play-weak', { hasText: '일시정지' }).click();
+  await page.getByRole('button', { name: '1분 늘리기' }).click();
+  await page.getByRole('button', { name: '다음 단계', exact: true }).click();
+  await page.getByRole('button', { name: '다음 단계로' }).click();
+  await expect(page.getByRole('heading', { name: '둘' })).toBeVisible();
+
+  await page.clock.runFor(1_000);
+  await page.locator('.play-primary').click();
+  await expect(page.locator('.play-status__label')).toHaveText('일시정지');
+  await expect(page.locator('.play-primary')).not.toHaveAttribute('aria-disabled', 'true');
+});
+
+test('저장 중에 뒤로 가면 저장이 끝난 뒤 한 번만 이동한다', async ({ page, request }) => {
+  const item = await createScenario(request, '저장 중 이동', [['소개', 300]]);
+  await page.goto('/');
+  await page.getByRole('button', { name: '‘저장 중 이동’ 열기' }).click();
+  await page.getByRole('button', { name: '편집' }).click();
+  await page.getByLabel('시나리오 이름').fill('저장 중 이동 2');
+  await page.route(`**/api/scenarios/${item.id}`, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await route.continue();
+  });
+  await page.getByRole('button', { name: '저장', exact: true }).click();
+  await page.getByRole('button', { name: '뒤로' }).click();
+  // 저장 중에는 ‘저장하지 않고 나가기’를 묻지 않는다(이미 보낸 저장은 취소할 수 없으므로).
+  expect(await page.getByRole('alertdialog').count()).toBe(0);
+  await expect(page.getByRole('dialog', { name: '저장 중 이동 2' })).toBeVisible();
+  await page.waitForTimeout(1000);
+  await expect(page).toHaveURL(new RegExp(`#/scenario/${item.id}$`));
+});
+
+test('목록을 처음부터 못 불러온 상태에서 저장에 성공하면 전체 목록을 다시 불러온다', async ({ page, request }) => {
+  await createScenario(request, '기존 하나', [['소개', 300]]);
+  await createScenario(request, '기존 둘', [['소개', 300]]);
+  await page.route('**/api/scenarios', (route) =>
+    route.request().method() === 'GET' ? route.abort() : route.continue(),
+  );
+  await page.goto('/');
+  await expect(page.getByText('목록을 불러오지 못했어요')).toBeVisible();
+  await page.unroute('**/api/scenarios');
+
+  await page.getByRole('button', { name: '새 시나리오' }).click();
+  await page.getByLabel('시나리오 이름').fill('새로 만든 것');
+  await page.getByRole('button', { name: '단계 추가' }).click();
+  await page.getByLabel('1번 단계 이름').fill('조사');
+  await page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: '새로 만든 것' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.scenario-row')).toHaveCount(3);
+  await expect(page.getByText('오프라인 · 저장된 목록 표시 중')).toHaveCount(0);
+});
+
+test('단계가 최대 개수일 때 삭제 되돌리기로 한도를 넘지 않는다', async ({ page, request }) => {
+  const stages = Array.from({ length: 100 }, (_, i) => [`단계 ${i + 1}`, 60] as [string, number]);
+  const item = await createScenario(request, '꽉 찬 시나리오', stages);
+  await page.goto(`/#/edit/${item.id}`);
+  await expect(page.locator('.stage-row')).toHaveCount(100);
+  await page.getByRole('button', { name: '1번 단계 삭제', exact: true }).click();
+  await page.getByRole('button', { name: '단계 추가' }).click();
+  await page.locator('.toast__action').click();
+  await expect(page.locator('.stage-row')).toHaveCount(100);
 });

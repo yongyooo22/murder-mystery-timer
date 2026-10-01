@@ -21,7 +21,7 @@ interface StageRowProps {
     onPointerCancel: (event: PointerEvent<HTMLElement>) => void;
   };
   onChange: (patch: Partial<StageDraft>) => void;
-  onMove: (delta: -1 | 1) => void;
+  onMove: (delta: -1 | 1, focus?: 'button' | 'handle') => void;
   onDuplicate: () => void;
   onDelete: () => void;
 }
@@ -51,10 +51,10 @@ export function StageRow({
   const onHandleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'ArrowUp' && index > 0) {
       event.preventDefault();
-      onMove(-1);
+      onMove(-1, 'handle');
     } else if (event.key === 'ArrowDown' && index < total - 1) {
       event.preventDefault();
-      onMove(1);
+      onMove(1, 'handle');
     }
   };
 

@@ -58,24 +58,19 @@ export async function openStore({ file, retentionDays, now = () => Date.now() })
   let queue = Promise.resolve();
 
   /**
-   * 변경 작업을 직렬로 실행한다. mutate가 throw하거나 파일 저장이 실패하면 변경 전 상태로 되돌린다.
+   * 변경 작업을 직렬로 실행한다. 사본에서 고친 뒤 파일 저장에 성공했을 때만 반영하므로,
+   * mutate가 throw하거나 저장이 실패하면 아무것도 바뀌지 않고, 저장 전의 상태가 읽히지도 않는다.
    * @template T
    * @param {(draft: Scenario[]) => T} mutate
    * @returns {Promise<T>}
    */
   function transact(mutate) {
     const run = async () => {
-      const before = items;
       const draft = structuredClone(items);
-      try {
-        const result = mutate(draft);
-        items = draft;
-        await writeFileAtomic(file, JSON.stringify({ version: 1, items }, null, 1));
-        return result;
-      } catch (error) {
-        items = before;
-        throw error;
-      }
+      const result = mutate(draft);
+      await writeFileAtomic(file, JSON.stringify({ version: 1, items: draft }, null, 1));
+      items = draft;
+      return result;
     };
     const next = queue.then(run, run);
     queue = next.catch(() => {});

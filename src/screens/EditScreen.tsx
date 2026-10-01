@@ -115,6 +115,15 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
   const [conflict, setConflict] = useState<Scenario | null>(null);
   const [gone, setGone] = useState<'trashed' | 'not_found' | null>(null);
   const [leaveTarget, setLeaveTarget] = useState<LeaveTarget | null>(null);
+  // 저장 중에 뒤로 가려 하면 저장이 끝난 뒤 그곳으로 이동한다(저장 요청은 취소할 수 없으므로).
+  const leaveAfterSave = useRef<LeaveTarget | null>(null);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
 
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickText, setQuickText] = useState('');
@@ -139,7 +148,8 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
   useEffect(() => {
     if (!dirty) return;
     setLeaveGuard((next) => {
-      setLeaveTarget({ kind: 'route', route: next });
+      if (savingRef.current) leaveAfterSave.current = { kind: 'route', route: next };
+      else setLeaveTarget({ kind: 'route', route: next });
       return false;
     });
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -162,14 +172,21 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
     goBack(target.kind === 'back' ? fallbackRoute : target.route);
   };
 
-  const requestBack = () => (dirty ? setLeaveTarget({ kind: 'back' }) : goBack(fallbackRoute));
+  const requestBack = () => {
+    if (savingRef.current) leaveAfterSave.current = { kind: 'back' };
+    else if (dirty) setLeaveTarget({ kind: 'back' });
+    else goBack(fallbackRoute);
+  };
 
   /* ---------- 초점 이동 ---------- */
 
   useLayoutEffect(() => {
     if (!focusRequest) return;
     const row = document.querySelector<HTMLElement>(`[data-stage-key="${focusRequest.key}"]`);
-    const target = row?.querySelector<HTMLElement>(`[data-field="${focusRequest.field}"], [data-tool="${focusRequest.field}"]`);
+    const target =
+      focusRequest.field === 'handle'
+        ? row?.querySelector<HTMLElement>('.stage-row__handle')
+        : row?.querySelector<HTMLElement>(`[data-field="${focusRequest.field}"], [data-tool="${focusRequest.field}"]`);
     if (target && !(target as HTMLButtonElement).disabled) {
       target.focus({ preventScroll: true });
       target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -221,12 +238,13 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
     setAnnouncement(`${from + 1}번 단계를 ${to + 1}번째로 옮겼어요.`);
   }, []);
 
-  const moveBy = (key: string, delta: -1 | 1) => {
+  /** focus: 이동 뒤 초점을 둘 곳(손잡이에서 화살표 키로 옮겼으면 손잡이에 그대로 둔다) */
+  const moveBy = (key: string, delta: -1 | 1, focus: 'button' | 'handle' = 'button') => {
     const from = draft.stages.findIndex((s) => s.key === key);
     const to = from + delta;
     if (from === -1 || to < 0 || to >= draft.stages.length) return;
     moveStage(from, to);
-    setFocusRequest({ key, field: delta < 0 ? 'up' : 'down' });
+    setFocusRequest({ key, field: focus === 'handle' ? 'handle' : delta < 0 ? 'up' : 'down' });
   };
 
   const addStage = () => {
@@ -266,7 +284,8 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
         label: '되돌리기',
         onClick: () => {
           setDraft((d) => {
-            if (d.stages.some((s) => s.key === removed.key)) return d;
+            // 그사이 단계를 추가해 최대 개수에 닿았으면 되돌리지 않는다.
+            if (d.stages.some((s) => s.key === removed.key) || d.stages.length >= LIMITS.stagesMax) return d;
             const stages = [...d.stages];
             stages.splice(Math.min(index, stages.length), 0, removed);
             return { ...d, stages };
@@ -347,10 +366,15 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
   };
 
   const finishSave = (item: Scenario, isNew: boolean) => {
+    const pending = leaveAfterSave.current;
+    leaveAfterSave.current = null;
+    // 저장이 끝나기 전에 다른 화면으로 이미 나갔다면 다시 이동하지 않는다.
+    if (!alive.current) return;
     setLeaveGuard(null);
     setRev(item.rev);
     toast.show({ message: '저장했어요.' });
-    if (isNew) navigate({ name: 'detail', id: item.id }, { replace: true });
+    if (pending) goBack(pending.kind === 'back' ? { name: 'detail', id: item.id } : pending.route);
+    else if (isNew) navigate({ name: 'detail', id: item.id }, { replace: true });
     else goBack({ name: 'detail', id: item.id });
   };
 
@@ -391,7 +415,8 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
     try {
       finishSave(await action(), isNew);
     } catch (error) {
-      handleSaveError(error);
+      leaveAfterSave.current = null;
+      if (alive.current) handleSaveError(error);
     } finally {
       savingRef.current = false;
       setSaving(false);
@@ -430,7 +455,12 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
       time: serverErrors[`${stage.key}:time`] ?? (visible(`${stage.key}:time`) ? local.time : undefined),
     };
   };
-  const shownErrorCount = showAllErrors ? errorCount + Object.keys(serverErrors).length : 0;
+  // 서버 오류 중 지금도 있는 항목(이름, 남아 있는 단계)만 센다.
+  const stageKeys = new Set(draft.stages.map((s) => s.key));
+  const liveServerErrors = Object.keys(serverErrors).filter(
+    (field) => field === 'name' || stageKeys.has(field.slice(0, field.lastIndexOf(':'))),
+  );
+  const shownErrorCount = showAllErrors ? errorCount + liveServerErrors.length : 0;
 
   return (
     <div className="screen edit-screen">
@@ -488,12 +518,18 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
                   rowRef={registerRow(stage.key)}
                   handleProps={handleProps(stage.key)}
                   onChange={(patch) => updateStage(stage.key, patch)}
-                  onMove={(delta) => moveBy(stage.key, delta)}
+                  onMove={(delta, focus) => moveBy(stage.key, delta, focus)}
                   onDuplicate={() => duplicateStage(stage.key)}
                   onDelete={() => deleteStage(stage.key)}
                 />
               ))}
             </ol>
+          )}
+
+          {stagesError && draft.stages.length > 0 && (
+            <div className="stages-error" data-error-anchor tabIndex={-1}>
+              <FieldError>{stagesError}</FieldError>
+            </div>
           )}
 
           <Button block icon="plus" className="add-stage" onClick={addStage} disabled={atStageLimit}>
