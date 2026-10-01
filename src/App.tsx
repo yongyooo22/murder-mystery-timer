@@ -14,7 +14,7 @@ const TITLES: Record<Route['name'], string | null> = {
   detail: null,
   new: '새 시나리오',
   edit: '시나리오 편집',
-  play: '게임 진행',
+  play: null, // 진행 화면은 시나리오 이름을 제목으로 쓴다
   result: '진행 결과',
   trash: '휴지통',
 };
@@ -28,9 +28,11 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (route.name !== 'detail' && route.name !== 'list') window.scrollTo(0, 0);
+    // 진행 화면은 시나리오 이름을 제목으로 직접 쓴다(PlayScreen).
+    if (route.name === 'play') return;
     const title = TITLES[route.name];
     document.title = title ? `${title} · ${APP_CONFIG.name}` : APP_CONFIG.name;
-    if (route.name !== 'detail' && route.name !== 'list') window.scrollTo(0, 0);
   }, [route]);
 
   return (

@@ -1,21 +1,30 @@
 /*
  * 게임 진행 화면. 남은 시간이 시각적 중심이다.
- * 세로: 상단 → 단계 이름 → 남은 시간 → 상태·진행 바 → 보조 정보 → 조작
- * 가로: 왼쪽 단계 이름·남은 시간 / 오른쪽 보조 정보·조작
+ * 가로 화면이 기본 배치다: 위에 단계 표시·시나리오 이름·종료,
+ * 왼쪽에 단계 이름·남은 시간·상태, 오른쪽에 보조 정보와 조작 버튼.
+ * 세로 화면에서는 같은 요소를 위에서 아래로 쌓는다(맨 아래 @media 참고).
  */
 .play {
   --tone: var(--c-text);
   --tone-status: var(--c-accent);
-  --timer-max: 120px;
-  --play-gap: var(--sp-3);
+  --timer-max: 220px;
+  --play-gap: var(--sp-2);
+  --side-w: clamp(260px, 30vw, 400px);
+  --stage-size: clamp(22px, 2.6vw, 30px);
+  --stage-lh: 1.25;
 
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--side-w);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    'top top'
+    'notice notice'
+    'center side';
+  column-gap: clamp(24px, 3vw, 48px);
   height: 100vh;
   height: 100dvh;
-  min-height: 560px;
-  padding: calc(var(--safe-top) + var(--sp-2)) calc(var(--safe-right) + var(--gutter))
-    calc(var(--safe-bottom) + var(--sp-4)) calc(var(--safe-left) + var(--gutter));
+  padding: calc(var(--safe-top) + var(--sp-1)) calc(var(--safe-right) + var(--gutter))
+    calc(var(--safe-bottom) + var(--sp-3)) calc(var(--safe-left) + var(--gutter));
 }
 
 .play[data-tone='warn'] {
@@ -37,40 +46,50 @@ body.is-playing .toast-region {
   display: none;
 }
 
-/* ---------- 상단 ---------- */
+/* ---------- 상단: 단계 표시, 시나리오 이름(항상 표시), 전체화면·게임 종료 ---------- */
 
 .play-top {
-  display: flex;
+  grid-area: top;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'step name actions';
   align-items: center;
-  gap: var(--sp-2);
+  column-gap: var(--sp-3);
   min-height: 52px;
-}
-
-.play-top__info {
-  flex: 1;
-  min-width: 0;
-}
-
-.play-top__scenario {
-  font-size: var(--fs-14);
-  color: var(--c-text-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding-bottom: var(--sp-1);
 }
 
 .play-top__step {
-  font-size: var(--fs-17);
+  grid-area: step;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-15);
   font-weight: var(--fw-semibold);
-  line-height: var(--lh-tight);
+  color: var(--c-text-2);
+  white-space: nowrap;
+}
+
+.play-top__scenario {
+  grid-area: name;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: clamp(17px, 1.4vw + 9px, 22px);
+  font-weight: var(--fw-semibold);
+  line-height: 1.3;
   color: var(--c-text-2);
 }
 
 .play-top__actions {
+  grid-area: actions;
   display: flex;
   align-items: center;
   gap: var(--sp-1);
-  flex-shrink: 0;
   margin-right: calc(-1 * var(--sp-2));
 }
 
@@ -83,17 +102,18 @@ body.is-playing .toast-region {
   display: none;
 }
 
-@media (min-width: 600px) {
+@media (min-width: 900px) {
   .play-top__fullscreen-label {
     display: inline;
   }
 }
 
 .play-notice {
+  grid-area: notice;
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  margin-top: var(--sp-1);
+  margin-bottom: var(--sp-1);
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-md);
   background: var(--c-amber-soft);
@@ -109,20 +129,20 @@ body.is-playing .toast-region {
 /* ---------- 가운데: 단계 이름, 남은 시간, 상태 ---------- */
 
 .play-center {
-  flex: 1 1 auto;
+  grid-area: center;
   min-height: 0;
+  /* 숫자 영역 높이를 이 칸의 너비에 맞춰 정하기 위한 기준(아래 .play-timer의 44cqw) */
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   align-items: center;
   /* 숫자 영역 높이에 상한을 두고 단계 이름·숫자·상태를 한 묶음으로 가운데에 모은다. */
   justify-content: center;
-  padding: var(--sp-2) 0;
+  padding: var(--sp-1) 0;
 }
 
 /* 이름이 한 줄이든 두 줄이든 높이를 같게 잡아 숫자 위치가 흔들리지 않게 한다. */
 .play-stage {
-  --stage-size: clamp(24px, 6.6vw, 32px);
-  --stage-lh: 1.25;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -147,9 +167,13 @@ body.is-playing .toast-region {
 .play-timer {
   position: relative;
   flex: 1 1 0;
-  min-height: 132px;
-  /* 숫자 크기가 바뀌어도(14:32 → +01:23) 영역 높이는 그대로라 주변 요소가 움직이지 않는다. */
-  max-height: calc(var(--timer-max) * 1.3);
+  min-height: 96px;
+  /*
+   * 숫자 영역 높이 상한: 넉넉한 화면에서 단계 이름·숫자·상태가 너무 멀어지지 않게 한다.
+   * 44cqw ≈ ‘14:32’(2.82em)가 칸 너비를 채울 때 숫자 높이의 1.3배. 글자 수와 무관한 값이라
+   * 숫자가 바뀌어도(14:32 → +01:23) 영역 높이는 그대로이고 주변 요소가 움직이지 않는다.
+   */
+  max-height: min(calc(var(--timer-max) * 1.3), 44cqw);
   width: 100%;
   display: flex;
   align-items: center;
@@ -162,7 +186,7 @@ body.is-playing .toast-region {
   display: flex;
   justify-content: center;
   /* 컨테이너 쿼리를 쓸 수 없는 브라우저용 */
-  font-size: clamp(72px, 26vw, var(--timer-max));
+  font-size: clamp(64px, 18vw, var(--timer-max));
   /* 너비(자릿수)와 높이에 맞추되 상한을 둔다. */
   font-size: min(calc(94cqw / var(--timer-em)), 82cqh, var(--timer-max));
   font-weight: var(--fw-semibold);
@@ -229,7 +253,7 @@ body.is-playing .toast-region {
   align-items: center;
   gap: var(--sp-2);
   width: 100%;
-  max-width: 520px;
+  max-width: 560px;
 }
 
 .play-status__label {
@@ -259,56 +283,57 @@ body.is-playing .toast-region {
   transition: transform 300ms linear;
 }
 
-/* ---------- 보조 정보와 조작 ---------- */
+/* ---------- 오른쪽: 보조 정보와 조작 ---------- */
 
 .play-side {
+  grid-area: side;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: var(--sp-2);
-  width: 100%;
-  max-width: 560px;
-  margin: 0 auto;
 }
 
+/* 다음 단계와 전체 남은 시간을 한 줄씩: 좁은 오른쪽 칸에서도 단계 이름이 덜 잘린다. */
 .play-info {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--sp-4);
-  padding-top: var(--sp-3);
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding-top: var(--sp-2);
   border-top: 1px solid var(--c-divider);
 }
 
 .play-info__item {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  column-gap: var(--sp-3);
   min-width: 0;
 }
 
-.play-info__item--end {
-  flex-shrink: 0;
-  align-items: flex-end;
-  text-align: right;
-}
-
 .play-info__label {
-  font-size: var(--fs-13);
+  flex-shrink: 0;
+  font-size: var(--fs-14);
   color: var(--c-text-3);
 }
 
 .play-info__value {
+  min-width: 0;
   font-size: var(--fs-17);
   font-weight: var(--fw-semibold);
+  text-align: right;
   color: var(--c-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 .play-info__note {
+  flex-basis: 100%;
   font-size: var(--fs-13);
   color: var(--c-text-3);
+  text-align: right;
 }
 
 .play-list-button {
@@ -320,7 +345,6 @@ body.is-playing .toast-region {
   display: flex;
   flex-direction: column;
   gap: var(--play-gap);
-  margin-top: var(--sp-1);
 }
 
 .play-controls__row {
@@ -329,7 +353,7 @@ body.is-playing .toast-region {
   gap: var(--play-gap);
 }
 
-/* 좁은 가로 화면에서도 라벨이 두 줄로 갈라지지 않게 */
+/* 좁은 칸에서도 라벨이 두 줄로 갈라지지 않게 */
 .play-controls .btn {
   padding-left: var(--sp-3);
   padding-right: var(--sp-3);
@@ -339,8 +363,15 @@ body.is-playing .toast-region {
   white-space: nowrap;
 }
 
+.play-controls .btn--lg {
+  min-height: var(--tap-min);
+  gap: 6px;
+  font-size: var(--fs-15);
+}
+
 .play-primary.btn--xl {
-  min-height: 64px;
+  min-height: 56px;
+  font-size: var(--fs-18);
 }
 
 .play-primary[data-locked] {
@@ -373,6 +404,7 @@ body.is-playing .toast-region {
   padding: var(--sp-3) var(--sp-2);
   border-bottom: 1px solid var(--c-divider);
   color: var(--c-text);
+  break-inside: avoid;
 }
 
 .play-list__row--current {
@@ -418,128 +450,175 @@ body.is-playing .toast-region {
   margin-top: var(--sp-4);
 }
 
-/* ---------- 태블릿 세로: 남는 공간을 숫자와 조작 영역에 쓴다 ---------- */
+/* 가로 화면에서는 단계가 많으면 두 칸으로 나눠 한눈에 보이게 한다. */
+@media (orientation: landscape) and (min-width: 560px) {
+  .play-list--columns {
+    columns: 2;
+    column-gap: var(--sp-6);
+  }
+}
 
-@media (min-width: 600px) and (min-height: 700px) {
+/* ---------- 가로 태블릿·데스크톱: 높이가 넉넉하면 숫자와 버튼을 키운다 ---------- */
+
+@media (orientation: landscape) and (min-width: 560px) and (min-height: 601px) {
   .play {
-    --timer-max: 300px;
-    --play-gap: var(--sp-4);
+    --timer-max: 340px;
+    --play-gap: var(--sp-3);
+    --stage-size: clamp(28px, 3vw, 40px);
+    padding-top: calc(var(--safe-top) + var(--sp-2));
+    padding-bottom: calc(var(--safe-bottom) + var(--sp-6));
   }
 
-  .play-stage {
-    --stage-size: clamp(28px, 4.4vw, 40px);
+  .play-top {
+    min-height: 60px;
+    padding-bottom: var(--sp-2);
+  }
+
+  .play-top__step {
+    height: 36px;
+    font-size: var(--fs-17);
+  }
+
+  /* 큰 화면에서는 시나리오 이름도 더 크게 */
+  .play-top__scenario {
+    font-size: clamp(20px, 1.2vw + 10px, 28px);
   }
 
   .play-status__label {
     font-size: var(--fs-18);
   }
 
-  .play-info__value {
-    font-size: var(--fs-20);
-  }
-
   .play-info__label {
-    font-size: var(--fs-14);
-  }
-
-  .play-controls .btn--lg {
-    min-height: 60px;
-    font-size: var(--fs-18);
-  }
-
-  .play-primary.btn--xl {
-    min-height: 76px;
-    font-size: var(--fs-22);
-  }
-}
-
-/* ---------- 가로 화면: 타이머와 조작 영역을 좌우로 나눈다 ---------- */
-
-@media (orientation: landscape) and (max-height: 600px), (orientation: landscape) and (min-width: 900px) {
-  .play {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
-    /* 상단 / (저장 안내) / 본문 */
-    grid-template-rows: auto auto minmax(0, 1fr);
-    column-gap: var(--sp-8);
-    min-height: 0;
-  }
-
-  .play-top {
-    grid-column: 1 / -1;
-    grid-row: 1;
-  }
-
-  .play-notice {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  .play-center {
-    grid-column: 1;
-    grid-row: 3;
-    padding-bottom: 0;
-  }
-
-  .play-side {
-    grid-column: 2;
-    grid-row: 3;
-    justify-content: flex-end;
-    max-width: none;
-    margin: 0;
-  }
-}
-
-/* 휴대폰 가로: 높이가 낮으므로 간격과 버튼을 조금 줄인다(터치 영역 44px 이상 유지). */
-@media (orientation: landscape) and (max-height: 600px) {
-  .play {
-    --timer-max: 180px;
-    --play-gap: var(--sp-2);
-    padding-top: calc(var(--safe-top) + var(--sp-1));
-    padding-bottom: calc(var(--safe-bottom) + var(--sp-3));
-  }
-
-  .play-top {
-    min-height: 44px;
-  }
-
-  .play-stage {
-    --stage-size: clamp(22px, 3.4vw, 28px);
-  }
-
-  .play-timer {
-    min-height: 96px;
-  }
-
-  .play-info {
-    padding-top: var(--sp-2);
-  }
-
-  .play-controls .btn--lg {
-    min-height: var(--tap-min);
-    gap: 6px;
     font-size: var(--fs-15);
   }
 
-  .play-primary.btn--xl {
-    min-height: 52px;
+  .play-info__value {
+    font-size: var(--fs-20);
+  }
+
+  .play-controls .btn--lg {
+    min-height: 60px;
     font-size: var(--fs-18);
+    gap: var(--sp-2);
+  }
+
+  .play-primary.btn--xl {
+    min-height: 76px;
+    font-size: var(--fs-22);
   }
 }
 
-/* 태블릿 가로 */
-@media (orientation: landscape) and (min-width: 900px) and (min-height: 601px) {
+/* ---------- 세로 화면: 위에서 아래로 쌓는다 ---------- */
+
+@media (orientation: portrait), (max-width: 559px) {
   .play {
-    --timer-max: 260px;
-    --play-gap: var(--sp-4);
+    --timer-max: 120px;
+    --stage-size: clamp(24px, 6.6vw, 32px);
+    display: flex;
+    flex-direction: column;
+    min-height: 560px;
+    padding-top: calc(var(--safe-top) + var(--sp-2));
+    padding-bottom: calc(var(--safe-bottom) + var(--sp-4));
   }
 
-  .play-stage {
-    --stage-size: clamp(28px, 3vw, 40px);
+  /* 1줄: 단계 표시 + 버튼, 2줄: 시나리오 이름(화면 너비 전체) */
+  .play-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'step actions'
+      'name name';
+    row-gap: var(--sp-1);
+    padding-bottom: var(--sp-2);
+  }
+
+  .play-top__step {
+    justify-self: start;
+  }
+
+  .play-center {
+    flex: 1 1 auto;
+    padding: var(--sp-2) 0;
+  }
+
+  .play-timer {
+    min-height: 132px;
   }
 
   .play-side {
-    padding-bottom: var(--sp-4);
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    justify-content: flex-start;
+  }
+
+  /* 세로에서는 다음 단계(왼쪽)와 전체 남은 시간(오른쪽)을 나란히 */
+  .play-info {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding-top: var(--sp-3);
+  }
+
+  .play-info__item {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .play-info__note {
+    flex-basis: auto;
+  }
+
+  .play-info__item--end {
+    flex-shrink: 0;
+    align-items: flex-end;
+  }
+
+  .play-info__label {
+    font-size: var(--fs-13);
+  }
+
+  .play-info__value {
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .play-info__item--end .play-info__value {
+    text-align: right;
+  }
+
+  .play-controls {
+    gap: var(--sp-3);
+    margin-top: var(--sp-1);
+  }
+
+  .play-controls__row {
+    gap: var(--sp-3);
+  }
+
+  .play-controls .btn--lg {
+    min-height: var(--h-control);
+    font-size: var(--fs-16);
+    gap: var(--sp-2);
+  }
+
+  .play-primary.btn--xl {
+    min-height: 64px;
+    font-size: var(--fs-20);
+  }
+}
+
+/* 세로 태블릿 */
+@media (orientation: portrait) and (min-width: 600px) and (min-height: 700px) {
+  .play {
+    --timer-max: 300px;
+    --stage-size: clamp(28px, 4.4vw, 40px);
+  }
+
+  .play-info__value {
+    font-size: var(--fs-20);
   }
 
   .play-controls .btn--lg {
@@ -550,10 +629,6 @@ body.is-playing .toast-region {
   .play-primary.btn--xl {
     min-height: 76px;
     font-size: var(--fs-22);
-  }
-
-  .play-info__value {
-    font-size: var(--fs-20);
   }
 }
 

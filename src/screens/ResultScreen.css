@@ -92,9 +92,10 @@
   }
 }
 
-/* 단계별 비교: 휴대폰에서는 단계별 행, 넓은 화면에서는 표 */
+/* 단계별 비교: 좁으면 단계별 행, 들어갈 자리가 넓으면 표(화면이 아니라 이 영역의 너비 기준) */
 .result-stages {
   margin-top: var(--sp-8);
+  container-type: inline-size;
 }
 
 .result-stages__unplayed {
@@ -153,7 +154,7 @@
   color: var(--c-text-3);
 }
 
-@media (min-width: 600px) {
+@container (min-width: 480px) {
   .result-table__head,
   .result-row {
     display: grid;
@@ -199,5 +200,80 @@
   .result-actions {
     flex-direction: row;
     justify-content: flex-end;
+  }
+}
+
+/* ---------- 가로 화면: 왼쪽 요약과 버튼, 오른쪽 단계별 시간 ---------- */
+
+@media (orientation: landscape) and (min-width: 560px) {
+  .result-screen {
+    --content-max: 1200px;
+  }
+
+  .result-screen .screen__body {
+    padding-top: var(--sp-6);
+  }
+
+  .result-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 380px) minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas:
+      'head stages'
+      'summary stages'
+      'note stages'
+      'actions stages';
+    column-gap: clamp(24px, 4vw, 56px);
+    align-items: start;
+  }
+
+  .result-head {
+    grid-area: head;
+  }
+
+  .result-summary {
+    grid-area: summary;
+  }
+
+  .result-note {
+    grid-area: note;
+  }
+
+  .result-stages {
+    grid-area: stages;
+    margin-top: 0;
+  }
+
+  .result-actions {
+    grid-area: actions;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-top: var(--sp-6);
+  }
+
+  /* 왼쪽 칸에서는 요약을 세로 줄로(항목 이름 왼쪽, 값 오른쪽) */
+  .result-summary {
+    grid-template-columns: 1fr;
+    border-bottom: 0;
+  }
+
+  .result-summary__item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--sp-4);
+    padding: var(--sp-3) 0;
+    border-bottom: 1px solid var(--c-divider);
+  }
+
+  .result-summary__item + .result-summary__item {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .result-summary dd {
+    align-items: flex-end;
+    text-align: right;
+    font-size: var(--fs-20);
   }
 }

@@ -72,7 +72,10 @@ export function ScenarioDetailSheet({ id }: { id: string | null }) {
           </>
         }
       >
-        <ol className="stage-preview" aria-label="단계 구성">
+        <ol
+          className={['stage-preview', scenario.stages.length > 6 && 'stage-preview--columns'].filter(Boolean).join(' ')}
+          aria-label="단계 구성"
+        >
           {scenario.stages.map((stage, index) => (
             <li key={stage.id} className="stage-preview__row">
               <span className="stage-preview__index num">{index + 1}</span>

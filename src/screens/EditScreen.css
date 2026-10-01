@@ -12,10 +12,23 @@
   flex-direction: column;
 }
 
+/*
+ * 세로(기본): 이름 → 단계 목록 → 빠른 입력 → 아래 고정 저장 영역.
+ * .edit-side는 가로 화면의 오른쪽 칸이다. 세로에서는 묶음을 풀고(display: contents)
+ * 순서(order)만 정해 빠른 입력 다음에 저장 영역이 오게 한다.
+ */
 .edit-body {
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
+}
+
+.edit-main {
+  order: 1;
+}
+
+.edit-side {
+  display: contents;
 }
 
 .edit-section {
@@ -58,8 +71,19 @@
   border-top: 1px solid var(--c-divider);
 }
 
+/* 1줄: 손잡이·순번·이름, 2줄: 분·초, 3줄: 위로·아래로·복제 … 삭제 (오류는 해당 칸 바로 아래) */
 .stage-row {
   position: relative;
+  display: grid;
+  grid-template-columns: var(--tap-min) auto minmax(0, 1fr);
+  grid-template-areas:
+    'handle index name'
+    '. . name-error'
+    '. . time'
+    '. . time-error'
+    'tools tools tools';
+  align-items: start;
+  column-gap: var(--sp-2);
   padding: var(--sp-3) 0 var(--sp-2);
   border-bottom: 1px solid var(--c-divider);
   background: var(--c-bg);
@@ -77,13 +101,8 @@
   box-shadow: var(--shadow-pop);
 }
 
-.stage-row__top {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
-}
-
 .stage-row__handle {
+  grid-area: handle;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,18 +134,18 @@ body.is-dragging {
 }
 
 .stage-row__index {
-  flex: 0 0 auto;
+  grid-area: index;
   min-width: 2ch;
-  margin-right: var(--sp-2);
   font-size: var(--fs-16);
   font-weight: var(--fw-semibold);
+  line-height: var(--h-control);
   color: var(--c-text-2);
   text-align: right;
 }
 
 /* 긴 이름도 모두 보이도록 줄을 바꿔 늘어나는 입력칸(textarea.input 기본값을 덮어쓴다) */
 .stage-row .stage-row__name {
-  flex: 1;
+  grid-area: name;
   min-width: 0;
   min-height: var(--h-control);
   padding: 12px 14px;
@@ -136,24 +155,45 @@ body.is-dragging {
   overflow: hidden;
 }
 
-.stage-row__top {
-  align-items: flex-start;
+.stage-row__error {
+  margin-top: 6px;
 }
 
-.stage-row__top .stage-row__index {
-  line-height: var(--h-control);
+.stage-row__error--name {
+  grid-area: name-error;
 }
 
-/* 이름 입력칸과 같은 선에서 시작 */
-.stage-row__indent {
-  padding-left: calc(var(--tap-min) - var(--sp-2) + var(--sp-1) + 2ch + var(--sp-2) + var(--sp-1));
-  margin-top: var(--sp-2);
+.stage-row__error--time {
+  grid-area: time-error;
 }
 
 .stage-row__time {
+  grid-area: time;
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-2);
+}
+
+/* 단계 목록이 넓으면(가로 화면·태블릿) 분·초를 이름 오른쪽에 둔다. 위로·아래로·복제·삭제 줄은 그대로 따로 둔다. */
+.stage-list {
+  container-type: inline-size;
+}
+
+@container (min-width: 480px) {
+  .stage-row {
+    grid-template-columns: var(--tap-min) auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'handle index name time'
+      '. . name-error time-error'
+      'tools tools tools tools';
+  }
+
+  .stage-row__time {
+    margin-top: 0;
+    flex-wrap: nowrap;
+    gap: var(--sp-3);
+  }
 }
 
 .time-input {
@@ -174,6 +214,7 @@ body.is-dragging {
 }
 
 .stage-row__tools {
+  grid-area: tools;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -213,7 +254,8 @@ body.is-dragging {
 /* ---------- 빠른 입력 ---------- */
 
 .quick {
-  margin-top: var(--sp-5);
+  order: 2;
+  margin-bottom: var(--sp-5);
   border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
 }
@@ -323,6 +365,7 @@ body.is-dragging {
 /* ---------- 아래 고정 영역: 총 계획 시간 + 저장 ---------- */
 
 .edit-bar {
+  order: 3;
   position: sticky;
   bottom: 0;
   z-index: var(--z-sticky);
@@ -393,4 +436,68 @@ body.is-dragging {
 body:has(.edit-screen) .toast-region {
   top: calc(var(--safe-top) + 68px);
   bottom: auto;
+}
+
+/* ---------- 가로 화면: 왼쪽 이름·단계 목록, 오른쪽 저장 영역과 빠른 입력 ---------- */
+
+@media (orientation: landscape) and (min-width: 560px) {
+  .edit-screen {
+    --content-max: 1200px;
+  }
+
+  .edit-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(260px, 30vw, 360px);
+    column-gap: clamp(24px, 3vw, 40px);
+    align-items: start;
+  }
+
+  .edit-main {
+    grid-column: 1;
+    order: 0;
+  }
+
+  /* 오른쪽 칸은 스크롤해도 화면 위에 붙어 있어 저장 버튼이 늘 보이고, 아래 단계를 가리지 않는다. */
+  .edit-side {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    padding: var(--sp-5) 2px calc(var(--sp-5) + var(--safe-bottom));
+  }
+
+  .edit-bar {
+    order: 0;
+    position: static;
+    margin: 0;
+    padding: var(--sp-4);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+    background: var(--c-surface);
+  }
+
+  .edit-bar__row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-3);
+  }
+
+  .edit-bar__save {
+    width: 100%;
+  }
+
+  .quick {
+    order: 0;
+    margin: 0;
+  }
+
+  .edit-main .edit-section:last-child {
+    padding-bottom: var(--sp-10);
+  }
 }

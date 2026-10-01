@@ -65,6 +65,7 @@ test('빠른 입력으로 만들고 저장한 뒤 열기에서 게임을 시작�
   await sheet.getByRole('button', { name: '게임 시작' }).click();
   await expect(page.getByRole('heading', { name: '사건 소개' })).toBeVisible();
   await expect(page.locator('.play-top__step')).toContainText('1 / 4');
+  await expect(page.locator('.play-top__scenario')).toHaveText('빠른 입력 테스트');
 });
 
 test('목록을 눌러도 바로 게임이 시작되지 않는다', async ({ page, request }) => {
@@ -89,6 +90,10 @@ test('타이머: 일시정지, ±1분, 다음 단계 확인, 시간 초과, 마�
   await page.getByRole('button', { name: '게임 시작' }).click();
 
   await expect(page.getByRole('heading', { name: '소개' })).toBeVisible();
+  // 진행 화면에는 시나리오 이름이 항상 보인다.
+  await expect(page.locator('.play-top__scenario')).toHaveText('흐름 테스트');
+  await expect(page.locator('.play-top__scenario')).toBeInViewport();
+  await expect(page).toHaveTitle(/흐름 테스트/);
   await expect(digits(page)).toHaveText('05:00');
   await expect(page.getByText('진행 중', { exact: true })).toBeVisible();
 

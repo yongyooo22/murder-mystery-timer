@@ -129,3 +129,20 @@ export function useSoftKeyboardOpen(): boolean {
   }, []);
   return open;
 }
+
+/* ---------- 화면 방향 ---------- */
+
+/** 가로 배치를 쓰는 조건. CSS의 @media (orientation: landscape) and (min-width: 560px)와 같아야 한다. */
+export const LANDSCAPE_QUERY = '(orientation: landscape) and (min-width: 560px)';
+
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const list = window.matchMedia(query);
+    const update = () => setMatches(list.matches);
+    update();
+    list.addEventListener('change', update);
+    return () => list.removeEventListener('change', update);
+  }, [query]);
+  return matches;
+}

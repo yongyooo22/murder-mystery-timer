@@ -215,3 +215,42 @@
 .section__title[tabindex='-1']:focus-visible {
   outline-offset: 4px;
 }
+
+/* ---------- 가로 화면: 두 칸 배치 ---------- */
+
+@media (orientation: landscape) and (min-width: 560px) {
+  .list-screen {
+    --content-max: 1200px;
+  }
+
+  .list-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'resume saved'
+      'templates saved';
+    column-gap: clamp(24px, 4vw, 56px);
+    align-items: start;
+  }
+
+  .list-layout > .resume {
+    grid-area: resume;
+    margin-top: var(--sp-6);
+  }
+
+  .list-layout > .list-saved {
+    grid-area: saved;
+    border-top: 0;
+  }
+
+  .list-layout > .list-templates {
+    grid-area: templates;
+    border-top: 0;
+  }
+
+  /* 왼쪽 칸이 좁으므로 이어가기 버튼은 칸 너비에 맞춘다. */
+  .list-layout > .resume .btn {
+    flex: 1 1 100%;
+  }
+}
