@@ -1,0 +1,39 @@
+{
+  "name": "murder-mystery-timer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "머더미스터리 진행용 단계 타이머",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:web": "vite",
+    "dev:api": "node --watch server/index.mjs",
+    "build": "tsc -b && vite build",
+    "start": "node server/index.mjs",
+    "typecheck": "tsc -b",
+    "test": "vitest run && node --test \"server/*.test.mjs\"",
+    "test:unit": "vitest run",
+    "test:server": "node --test \"server/*.test.mjs\"",
+    "test:e2e": "npm run build && playwright test",
+    "icons": "node scripts/render-icons.mjs",
+    "qa:screens": "node e2e/visual-check.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "^22.20.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "concurrently": "^9.2.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.6",
+    "vitest": "^4.1.11"
+  }
+}

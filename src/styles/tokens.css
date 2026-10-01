@@ -1,0 +1,127 @@
+/*
+ * 디자인 토큰. 색·글자·간격·모서리·높이는 여기서만 정의하고 컴포넌트는 토큰을 참조한다.
+ * 대비(배경 #15171C 기준): 본문 15.7:1, 보조 10.5:1, 안내 7.4:1, 비활성 5.4:1, 골드 9.2:1, 앰버 8.8:1, 빨강 6.3:1
+ */
+:root {
+  color-scheme: dark;
+
+  /* 배경·면 */
+  --c-bg: #15171c;
+  --c-surface: #20232b;
+  --c-surface-raised: #2a2e38;
+  --c-surface-hover: #262a33;
+  --c-overlay: rgba(8, 9, 12, 0.72);
+
+  /* 선 */
+  --c-divider: #2c3039;
+  --c-border: #3a3f4c;
+  --c-border-strong: #5f6576;
+  --c-border-hover: #737a8c;
+
+  /* 글자 */
+  --c-text: #f3f0e8;
+  --c-text-2: #cbc6ba;
+  --c-text-3: #aba69b;
+  --c-text-disabled: #918d85;
+
+  /* 강조(골드) */
+  --c-accent: #d8b477;
+  --c-accent-hover: #e3c48f;
+  --c-accent-pressed: #c9a466;
+  --c-accent-soft: rgba(216, 180, 119, 0.14);
+  --c-accent-line: rgba(216, 180, 119, 0.45);
+  --c-on-accent: #1b1812;
+
+  /* 상태 */
+  --c-amber: #f5a524;
+  --c-amber-soft: rgba(245, 165, 36, 0.14);
+  --c-danger: #f47265;
+  --c-danger-hover: #f88a7f;
+  --c-danger-soft: rgba(244, 114, 101, 0.13);
+  --c-danger-line: rgba(244, 114, 101, 0.5);
+  --c-on-danger: #1b1812;
+  --c-success: #7dcb9b;
+  --c-success-soft: rgba(125, 203, 155, 0.13);
+  --c-info: #a9c2e8;
+  --c-info-soft: rgba(169, 194, 232, 0.12);
+
+  --c-focus: #e9cf9c;
+  --c-disabled-bg: #2a2d35;
+  --c-input-bg: var(--c-surface);
+  --c-input-bg-sunken: #191b21;
+
+  /* 글꼴: 시스템 한글 산세리프 */
+  --font-sans: -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕',
+    'Noto Sans KR', 'Noto Sans CJK KR', Roboto, 'Segoe UI', sans-serif;
+  /* 숫자는 라틴 시스템 글꼴을 먼저 써서 폭이 일정한 숫자(tabular-nums)를 확실히 적용한다. */
+  --font-digits: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    var(--font-sans);
+
+  --fs-13: 0.8125rem;
+  --fs-14: 0.875rem;
+  --fs-15: 0.9375rem;
+  --fs-16: 1rem;
+  --fs-17: 1.0625rem;
+  --fs-18: 1.125rem;
+  --fs-20: 1.25rem;
+  --fs-22: 1.375rem;
+  --fs-24: 1.5rem;
+  --fs-28: 1.75rem;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-tight: 1.25;
+  --lh-normal: 1.5;
+
+  /* 간격 */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* 모서리 */
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  /* 조작 요소 높이 */
+  --tap-min: 44px;
+  --h-control: 48px;
+  --h-primary: 52px;
+  --h-primary-xl: 60px;
+
+  /* 레이아웃 */
+  --content-max: 720px;
+  --gutter: 16px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  /* 움직임 */
+  --dur-fast: 120ms;
+  --dur-med: 200ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* 겹침 순서 */
+  --z-sticky: 10;
+  --z-menu: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+@media (min-width: 600px) {
+  :root {
+    --gutter: 24px;
+  }
+}

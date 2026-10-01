@@ -1,0 +1,149 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-width: var(--tap-min);
+  min-height: var(--h-control);
+  padding: var(--sp-2) var(--sp-5);
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  font-size: var(--fs-16);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition:
+    background-color var(--dur-fast),
+    border-color var(--dur-fast),
+    color var(--dur-fast),
+    opacity var(--dur-fast);
+}
+
+.btn__label {
+  min-width: 0;
+}
+
+.btn--sm {
+  min-height: var(--tap-min);
+  padding: var(--sp-1) var(--sp-3);
+  font-size: var(--fs-15);
+  gap: 6px;
+}
+
+.btn--lg {
+  min-height: var(--h-primary);
+  font-size: var(--fs-17);
+}
+
+.btn--xl {
+  min-height: var(--h-primary-xl);
+  font-size: var(--fs-20);
+  gap: var(--sp-3);
+}
+
+.btn--block {
+  display: flex;
+  width: 100%;
+}
+
+/* 주요 버튼: 골드 */
+.btn--primary {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--c-accent-hover);
+}
+.btn--primary:active:not(:disabled) {
+  background: var(--c-accent-pressed);
+}
+
+/* 보조 버튼: 면 + 테두리 */
+.btn--secondary {
+  background: var(--c-surface);
+  border-color: var(--c-border-strong);
+  color: var(--c-text);
+}
+.btn--secondary:hover:not(:disabled) {
+  background: var(--c-surface-raised);
+}
+.btn--secondary:active:not(:disabled) {
+  background: var(--c-surface-hover);
+}
+
+/* 약한 버튼: 배경 없음 */
+.btn--ghost {
+  background: transparent;
+  color: var(--c-text-2);
+}
+.btn--ghost:hover:not(:disabled) {
+  background: var(--c-surface);
+  color: var(--c-text);
+}
+.btn--ghost:active:not(:disabled) {
+  background: var(--c-surface-raised);
+}
+
+/* 삭제·종료 확인용 */
+.btn--danger {
+  background: var(--c-danger);
+  color: var(--c-on-danger);
+}
+.btn--danger:hover:not(:disabled) {
+  background: var(--c-danger-hover);
+}
+
+.btn--danger-outline {
+  background: transparent;
+  border-color: var(--c-danger-line);
+  color: var(--c-danger);
+}
+.btn--danger-outline:hover:not(:disabled) {
+  background: var(--c-danger-soft);
+}
+
+/* 비활성: 글자는 읽을 수 있는 밝기로 유지하고 면·테두리로 구분한다. */
+.btn:disabled {
+  background: var(--c-disabled-bg);
+  border-color: transparent;
+  color: var(--c-text-disabled);
+}
+.btn--ghost:disabled,
+.btn--danger-outline:disabled {
+  background: transparent;
+  border-color: transparent;
+}
+.btn[aria-busy='true'] {
+  cursor: progress;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: var(--r-md);
+  color: var(--c-text-2);
+  touch-action: manipulation;
+  transition:
+    background-color var(--dur-fast),
+    color var(--dur-fast);
+}
+.icon-btn:hover:not(:disabled) {
+  background: var(--c-surface);
+  color: var(--c-text);
+}
+.icon-btn:active:not(:disabled) {
+  background: var(--c-surface-raised);
+}
+.icon-btn--secondary {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+}
+.icon-btn:disabled {
+  color: var(--c-text-disabled);
+}

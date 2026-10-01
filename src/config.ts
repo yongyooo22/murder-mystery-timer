@@ -1,0 +1,11 @@
+/**
+ * 앱 전체에서 쓰는 이름과 기본 문구.
+ * 앱 이름을 바꾸려면 이 파일의 `name`, `shortName`만 고치면 된다.
+ * (브라우저 탭 제목, 홈 화면 아이콘 이름(manifest), 화면 상단 표기에 모두 반영된다.)
+ */
+export const APP_CONFIG = {
+  name: '머더 타이머',
+  shortName: '머더 타이머',
+  description: '머더미스터리 진행용 단계 타이머',
+  themeColor: '#15171C',
+} as const;

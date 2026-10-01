@@ -1,0 +1,66 @@
+.trash-screen .screen__body {
+  padding-bottom: calc(var(--sp-10) + var(--safe-bottom));
+}
+
+.trash-desc {
+  padding: var(--sp-4) 0;
+  font-size: var(--fs-15);
+  color: var(--c-text-2);
+}
+
+.trash-alert {
+  margin-bottom: var(--sp-3);
+}
+
+.trash-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-12) 0;
+  color: var(--c-text-2);
+}
+
+.trash-list {
+  border-top: 1px solid var(--c-divider);
+}
+
+.trash-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3) var(--sp-4);
+  padding: var(--sp-4) 0;
+  border-bottom: 1px solid var(--c-divider);
+}
+
+.trash-row__text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.trash-row__name {
+  font-size: var(--fs-17);
+  font-weight: var(--fw-semibold);
+  line-height: 1.35;
+}
+
+.trash-row__meta {
+  font-size: var(--fs-14);
+  color: var(--c-text-3);
+}
+
+/* 복원과 영구 삭제는 서로 떨어뜨려 둔다. */
+.trash-row__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  flex: 1 1 100%;
+}
+
+@media (min-width: 600px) {
+  .trash-row__actions {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+  }
+}

@@ -1,0 +1,90 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.field__label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.field__label {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text-2);
+}
+
+.field__count {
+  font-size: var(--fs-13);
+  color: var(--c-text-3);
+}
+
+.field__count--over {
+  color: var(--c-danger);
+}
+
+.input {
+  width: 100%;
+  min-height: var(--h-control);
+  padding: 10px 14px;
+  background: var(--c-input-bg);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-md);
+  color: var(--c-text);
+  font-size: var(--fs-17);
+  line-height: var(--lh-tight);
+  transition: border-color var(--dur-fast);
+}
+
+/* 모바일에서 확대되지 않도록 입력 글자는 16px 이상 */
+textarea.input {
+  min-height: 140px;
+  padding: 12px 14px;
+  font-size: var(--fs-16);
+  line-height: var(--lh-normal);
+  resize: vertical;
+}
+
+.input::placeholder {
+  color: var(--c-text-3);
+  opacity: 1;
+}
+
+.input:hover:not(:focus) {
+  border-color: var(--c-border-hover);
+}
+
+.input:focus {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 1px var(--c-accent);
+  outline: none;
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--c-danger);
+}
+
+.input[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 1px var(--c-danger);
+}
+
+.field__hint {
+  font-size: var(--fs-14);
+  color: var(--c-text-3);
+}
+
+.field__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  color: var(--c-danger);
+}
+
+.field__error svg {
+  margin-top: 2px;
+}

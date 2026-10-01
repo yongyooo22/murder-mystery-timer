@@ -1,0 +1,22 @@
+import type { ReactNode } from 'react';
+import './TopBar.css';
+
+interface TopBarProps {
+  left?: ReactNode;
+  title: ReactNode;
+  right?: ReactNode;
+  /** 앱 이름처럼 화면의 대표 제목이면 h1 */
+  as?: 'h1' | 'h2';
+}
+
+export function TopBar({ left, title, right, as: Heading = 'h1' }: TopBarProps) {
+  return (
+    <header className="topbar">
+      <div className="topbar__inner">
+        {left && <div className="topbar__left">{left}</div>}
+        <Heading className="topbar__title">{title}</Heading>
+        {right && <div className="topbar__right">{right}</div>}
+      </div>
+    </header>
+  );
+}

@@ -1,0 +1,102 @@
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 56px;
+  padding: var(--sp-2) 0;
+}
+
+.switch-row__icon {
+  color: var(--c-text-2);
+}
+
+.switch-row__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.switch-row__label {
+  color: var(--c-text);
+  font-size: var(--fs-16);
+}
+
+.switch-row__desc {
+  color: var(--c-text-3);
+  font-size: var(--fs-14);
+}
+
+.switch-row--disabled .switch-row__text {
+  cursor: not-allowed;
+}
+
+.switch-row--disabled .switch-row__label {
+  color: var(--c-text-disabled);
+}
+
+/* 켬/끔을 색과 함께 글자로도 보여 준다. */
+.switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 72px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--r-pill);
+  background: var(--c-surface-raised);
+  border: 1px solid var(--c-border-strong);
+  transition: background-color var(--dur-fast);
+  flex-shrink: 0;
+}
+
+/* 터치 영역은 44px 이상 */
+.switch::before {
+  content: '';
+  position: absolute;
+  inset: -5px -4px;
+}
+
+.switch__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--c-text-2);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.switch__state {
+  margin-left: auto;
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text-2);
+}
+
+.switch[aria-checked='true'] {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+}
+
+.switch[aria-checked='true'] .switch__thumb {
+  transform: translateX(36px);
+  background: var(--c-on-accent);
+}
+
+.switch[aria-checked='true'] .switch__state {
+  margin-left: 0;
+  margin-right: auto;
+  color: var(--c-on-accent);
+}
+
+.switch:disabled {
+  background: var(--c-disabled-bg);
+  border-color: var(--c-border);
+}
+
+.switch:disabled .switch__thumb {
+  background: var(--c-text-disabled);
+}

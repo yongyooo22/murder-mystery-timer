@@ -1,0 +1,23 @@
+.spinner {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.spinner svg {
+  animation: spinner-rotate 0.9s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* 움직임을 줄여도 진행 중임은 보이도록 천천히 돌린다. */
+  .spinner svg {
+    animation: spinner-rotate 2.4s linear infinite !important;
+    animation-duration: 2.4s !important;
+    animation-iteration-count: infinite !important;
+  }
+}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="%APP_DESCRIPTION%" />
+    <meta name="theme-color" content="%THEME_COLOR%" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="%APP_NAME%" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <title>%APP_NAME%</title>
+    <style>
+      html,
+      body {
+        background: %THEME_COLOR%;
+        color: #f3f0e8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>이 앱을 사용하려면 브라우저에서 JavaScript를 켜 주세요.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

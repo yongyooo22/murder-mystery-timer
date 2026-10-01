@@ -1,0 +1,38 @@
+.topbar {
+  border-bottom: 1px solid var(--c-divider);
+}
+
+.topbar__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  max-width: var(--content-max);
+  min-height: 60px;
+  margin: 0 auto;
+  padding: var(--sp-2) calc(var(--gutter) - var(--sp-2));
+}
+
+.topbar__left,
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-shrink: 0;
+}
+
+.topbar__title {
+  flex: 1;
+  min-width: 0;
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar__left + .topbar__title {
+  padding-left: 0;
+}

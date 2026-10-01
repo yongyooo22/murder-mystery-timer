@@ -1,0 +1,137 @@
+.modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--sp-4) + var(--safe-top)) calc(var(--sp-4) + var(--safe-right))
+    calc(var(--sp-4) + var(--safe-bottom)) calc(var(--sp-4) + var(--safe-left));
+  background: var(--c-overlay);
+  animation: modal-fade var(--dur-med) var(--ease-out);
+}
+
+.modal {
+  --c-input-bg: var(--c-input-bg-sunken);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 440px;
+  max-height: 100%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-pop);
+  animation: modal-rise var(--dur-med) var(--ease-out);
+}
+
+.modal__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-5) var(--sp-5) 0;
+}
+
+.modal__titles {
+  flex: 1;
+  min-width: 0;
+  padding-top: var(--sp-1);
+}
+
+.modal__title {
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+}
+
+.modal__subtitle {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-15);
+  color: var(--c-text-2);
+}
+
+.modal__head .icon-btn {
+  margin: calc(-1 * var(--sp-2)) calc(-1 * var(--sp-2)) 0 0;
+}
+
+.modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sp-3) var(--sp-5) var(--sp-5);
+  color: var(--c-text-2);
+}
+
+.modal__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-5) var(--sp-5);
+  border-top: 1px solid var(--c-divider);
+}
+
+.modal__footer > .btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* 시트: 휴대폰에서는 아래쪽에 붙고, 넓은 화면에서는 가운데 대화상자로 보인다. */
+@media (max-width: 599px) {
+  .modal-root--sheet {
+    align-items: flex-end;
+    padding: var(--safe-top) 0 0;
+  }
+
+  .modal--sheet {
+    max-width: none;
+    max-height: calc(100% - var(--sp-6));
+    border-bottom: 0;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    animation-name: modal-slide-up;
+  }
+
+  .modal--sheet .modal__footer {
+    padding-bottom: calc(var(--sp-4) + var(--safe-bottom));
+  }
+
+  .modal--sheet:not(:has(.modal__footer)) .modal__body {
+    padding-bottom: calc(var(--sp-5) + var(--safe-bottom));
+  }
+}
+
+@media (min-width: 600px) {
+  .modal--sheet {
+    max-width: 560px;
+  }
+}
+
+@keyframes modal-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes modal-slide-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0.6;
+  }
+}
+
+/* 선택지가 셋 이상인 대화상자: 버튼을 세로로 쌓는다. */
+.modal--stacked-actions .modal__footer {
+  flex-direction: column-reverse;
+}
+
+.modal--stacked-actions .modal__footer > .btn {
+  flex: none;
+  width: 100%;
+}

@@ -1,0 +1,7 @@
+{
+  "scenarioNameMax": 60,
+  "stageNameMax": 60,
+  "stagesMax": 100,
+  "stageMaxMinutes": 999,
+  "maxScenarios": 500
+}

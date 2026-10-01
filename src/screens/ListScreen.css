@@ -1,0 +1,217 @@
+.list-screen .screen__body {
+  padding-bottom: calc(var(--sp-12) + var(--safe-bottom));
+}
+
+.list-count {
+  margin-left: var(--sp-2);
+  font-size: var(--fs-15);
+  font-weight: var(--fw-medium);
+  color: var(--c-text-3);
+}
+
+/* 공유 안내 + 마지막으로 불러온 시각 */
+.sync-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  column-gap: var(--sp-3);
+  row-gap: 2px;
+  margin-top: calc(-1 * var(--sp-2));
+  font-size: var(--fs-14);
+  color: var(--c-text-3);
+}
+
+.sync-line__shared {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.sync-line__state {
+  white-space: nowrap;
+}
+
+.list-alert {
+  margin-top: var(--sp-3);
+}
+
+.list-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-12) 0;
+  color: var(--c-text-2);
+}
+
+.list-new {
+  margin-top: var(--sp-5);
+}
+
+@media (min-width: 600px) {
+  .list-new {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .list-new .btn--block {
+    width: auto;
+    min-width: 200px;
+  }
+}
+
+/* 저장된 시나리오: 카드 대신 구분선으로 나눈 한 열 목록 */
+.scenario-list {
+  margin-top: var(--sp-4);
+  border-top: 1px solid var(--c-divider);
+}
+
+.scenario-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 76px;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--c-divider);
+  cursor: pointer;
+}
+
+.scenario-row__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.scenario-row__name {
+  font-size: var(--fs-17);
+  font-weight: var(--fw-semibold);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.scenario-row__meta {
+  margin-top: 2px;
+  font-size: var(--fs-14);
+  color: var(--c-text-3);
+}
+
+.scenario-row__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-shrink: 0;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .scenario-row:hover .scenario-row__name {
+    color: var(--c-accent-hover);
+  }
+}
+
+.list-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sp-3);
+}
+
+.list-footer .btn {
+  margin-right: calc(-1 * var(--sp-3));
+}
+
+/* 진행 중인 게임 */
+.resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3) var(--sp-4);
+  margin-top: var(--sp-5);
+  padding: var(--sp-4);
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-accent);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+}
+
+.resume__text {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.resume__eyebrow {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--c-accent);
+}
+
+.resume__name {
+  margin-top: 2px;
+  font-size: var(--fs-18);
+  font-weight: var(--fw-semibold);
+  line-height: 1.35;
+}
+
+.resume__meta {
+  margin-top: 2px;
+  font-size: var(--fs-15);
+  color: var(--c-text-2);
+}
+
+.resume .btn {
+  flex: 1 1 160px;
+}
+
+@media (min-width: 600px) {
+  .resume .btn {
+    flex: 0 0 auto;
+    min-width: 160px;
+  }
+}
+
+/* 템플릿 */
+.template-desc {
+  margin-top: calc(-1 * var(--sp-2));
+}
+
+.template-list {
+  margin-top: var(--sp-3);
+}
+
+.template-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) 0;
+  border-bottom: 1px solid var(--c-divider);
+}
+
+.template-row:last-child {
+  border-bottom: 0;
+}
+
+.template-row__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.template-row__name {
+  font-size: var(--fs-16);
+  font-weight: var(--fw-semibold);
+}
+
+.template-row__meta {
+  font-size: var(--fs-14);
+  color: var(--c-text-2);
+}
+
+.template-row__desc {
+  margin-top: 2px;
+  font-size: var(--fs-14);
+  color: var(--c-text-3);
+}
+
+.section__title[tabindex='-1']:focus-visible {
+  outline-offset: 4px;
+}
