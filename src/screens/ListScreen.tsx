@@ -91,10 +91,11 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
         right={<IconButton icon="settings" label="설정" onClick={() => setSettingsOpen(true)} />}
       />
 
-      <main className="screen__body">
+      {/* 가로 화면: 왼쪽 진행 중인 게임·템플릿, 오른쪽 저장된 시나리오(ListScreen.css) */}
+      <main className="screen__body list-layout">
         <ResumeGame />
 
-        <section className="section" aria-labelledby="saved-title">
+        <section className="section list-saved" aria-labelledby="saved-title">
           <div className="section__head">
             <h2 id="saved-title" className="section__title">
               저장된 시나리오
@@ -133,7 +134,7 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
                 </>
               }
             >
-              직접 단계를 만들거나 아래 템플릿으로 시작해 보세요.
+              직접 단계를 만들거나 템플릿으로 시작해 보세요.
             </EmptyState>
           )}
 
@@ -188,7 +189,7 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
           </div>
         </section>
 
-        <section className="section" aria-labelledby="template-title">
+        <section className="section list-templates" aria-labelledby="template-title">
           <div className="section__head">
             <h2 id="template-title" className="section__title" ref={templatesRef} tabIndex={-1}>
               템플릿으로 만들기

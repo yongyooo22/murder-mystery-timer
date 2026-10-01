@@ -106,6 +106,17 @@
   }
 }
 
+/* 가로 화면에서는 시트를 넓혀 목록을 두 칸으로 보여 줄 수 있게 한다. */
+@media (orientation: landscape) and (min-width: 600px) {
+  .modal--sheet {
+    max-width: 760px;
+  }
+
+  .modal--wide {
+    max-width: 720px;
+  }
+}
+
 @keyframes modal-fade {
   from {
     opacity: 0;

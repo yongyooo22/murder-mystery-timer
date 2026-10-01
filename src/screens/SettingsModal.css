@@ -11,8 +11,22 @@
   border-bottom: 1px solid var(--c-divider);
 }
 
-.settings__heading:first-child {
+.settings__group:first-child .settings__heading:first-child {
   margin-top: 0;
+}
+
+/* 가로 화면에서는 두 칸(알림 | 화면·저장 위치)으로 나눠 낮은 화면에서도 스크롤을 줄인다. */
+@media (orientation: landscape) and (min-width: 600px) {
+  .settings {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--sp-8);
+    align-items: start;
+  }
+
+  .settings__group .settings__heading:first-child {
+    margin-top: 0;
+  }
 }
 
 .settings__preview {

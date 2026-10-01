@@ -53,7 +53,7 @@ export function ResultScreen() {
 
   return (
     <div className="screen result-screen">
-      <main className="screen__body">
+      <main className="screen__body result-layout">
         <header className="result-head">
           <p className="result-head__eyebrow">게임 종료</p>
           <h1 className="result-head__title">{result.scenarioName}</h1>

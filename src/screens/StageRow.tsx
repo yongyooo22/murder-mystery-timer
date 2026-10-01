@@ -74,41 +74,39 @@ export function StageRow({
       style={style}
       data-stage-key={stage.key}
     >
-      <div className="stage-row__top">
-        <button
-          type="button"
-          className="stage-row__handle"
-          aria-label={`${n}번 단계 순서 바꾸기. 끌어서 옮기거나 위·아래 화살표 키를 누르세요.`}
-          title="끌어서 순서 바꾸기"
-          onKeyDown={onHandleKeyDown}
-          {...handleProps}
-        >
-          <Icon name="grip" size={22} />
-        </button>
-        <span className="stage-row__index num" aria-hidden="true">
-          {n}
-        </span>
-        <AutoTextarea
-          className="input stage-row__name"
-          value={stage.name}
-          placeholder="단계 이름"
-          aria-label={`${n}번 단계 이름`}
-          aria-invalid={errors.name ? true : undefined}
-          aria-describedby={errors.name ? nameErrorId : undefined}
-          data-field="name"
-          enterKeyHint="next"
-          autoComplete="off"
-          onChange={(name) => onChange({ name })}
-          onEnter={() => minutesRef.current?.focus()}
-        />
-      </div>
+      <button
+        type="button"
+        className="stage-row__handle"
+        aria-label={`${n}번 단계 순서 바꾸기. 끌어서 옮기거나 위·아래 화살표 키를 누르세요.`}
+        title="끌어서 순서 바꾸기"
+        onKeyDown={onHandleKeyDown}
+        {...handleProps}
+      >
+        <Icon name="grip" size={22} />
+      </button>
+      <span className="stage-row__index num" aria-hidden="true">
+        {n}
+      </span>
+      <AutoTextarea
+        className="input stage-row__name"
+        value={stage.name}
+        placeholder="단계 이름"
+        aria-label={`${n}번 단계 이름`}
+        aria-invalid={errors.name ? true : undefined}
+        aria-describedby={errors.name ? nameErrorId : undefined}
+        data-field="name"
+        enterKeyHint="next"
+        autoComplete="off"
+        onChange={(name) => onChange({ name })}
+        onEnter={() => minutesRef.current?.focus()}
+      />
       {errors.name && (
-        <div className="stage-row__indent">
+        <div className="stage-row__error stage-row__error--name">
           <FieldError id={nameErrorId}>{errors.name}</FieldError>
         </div>
       )}
 
-      <div className="stage-row__indent stage-row__time" role="group" aria-label={`${n}번 단계 시간`}>
+      <div className="stage-row__time" role="group" aria-label={`${n}번 단계 시간`}>
         <label className="time-input">
           <input
             ref={minutesRef}
@@ -154,7 +152,7 @@ export function StageRow({
         </label>
       </div>
       {errors.time && (
-        <div className="stage-row__indent">
+        <div className="stage-row__error stage-row__error--time">
           <FieldError id={timeErrorId}>{errors.time}</FieldError>
         </div>
       )}

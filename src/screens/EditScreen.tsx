@@ -26,7 +26,7 @@ import { findTemplate, type Template } from '../data/templates';
 import type { Scenario } from '../data/types';
 import { createId } from '../lib/id';
 import { quotedObject } from '../lib/korean';
-import { useSoftKeyboardOpen } from '../lib/device';
+import { LANDSCAPE_QUERY, useMediaQuery, useSoftKeyboardOpen } from '../lib/device';
 import { QUICK_INPUT_EXAMPLE, parseQuickInput, type ParseError, type ParsedStage } from '../lib/quickInput';
 import { goBack, navigate, setLeaveGuard, type Route } from '../lib/router';
 import { durationText, relativeTimeText } from '../lib/time';
@@ -298,16 +298,18 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
 
   // 아래 고정 영역의 높이: 초점이 간 입력칸이 그 뒤로 숨지 않게 하고(scroll-padding),
   // 끌어서 옮길 때 자동 스크롤 기준으로도 쓴다.
+  // 가로 화면에서는 저장 영역이 오른쪽 칸에 있어 아래를 가리지 않는다.
+  const landscape = useMediaQuery(LANDSCAPE_QUERY);
   const [barHeight, setBarHeight] = useState(0);
   useLayoutEffect(() => {
     const bar = barRef.current;
     if (!bar) return;
-    const update = () => setBarHeight(keyboardOpen ? 0 : bar.offsetHeight);
+    const update = () => setBarHeight(keyboardOpen || landscape ? 0 : bar.offsetHeight);
     update();
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
     observer?.observe(bar);
     return () => observer?.disconnect();
-  }, [keyboardOpen]);
+  }, [keyboardOpen, landscape]);
   useEffect(() => {
     document.documentElement.style.scrollPaddingBottom = barHeight ? `${barHeight + 16}px` : '';
     return () => {
@@ -469,73 +471,119 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
         title={scenarioId ? '시나리오 편집' : '새 시나리오'}
       />
 
+      {/* 가로 화면: 왼쪽 이름·단계 목록, 오른쪽 총 계획 시간·저장과 빠른 입력(EditScreen.css) */}
       <main className="screen__body edit-body">
-        <section className="edit-section">
-          <TextField
-            ref={nameRef}
-            label="시나리오 이름"
-            value={draft.name}
-            placeholder="예: 저택의 밤"
-            maxChars={LIMITS.scenarioNameMax}
-            error={nameError}
-            autoComplete="off"
-            enterKeyHint="next"
-            onChange={(name) => {
-              setDraft((d) => ({ ...d, name }));
-              touch('name');
-              clearServerError('name');
-              setSaveError(null);
-            }}
-          />
-        </section>
+        <div className="edit-main">
+          <section className="edit-section">
+            <TextField
+              ref={nameRef}
+              label="시나리오 이름"
+              value={draft.name}
+              placeholder="예: 저택의 밤"
+              maxChars={LIMITS.scenarioNameMax}
+              error={nameError}
+              autoComplete="off"
+              enterKeyHint="next"
+              onChange={(name) => {
+                setDraft((d) => ({ ...d, name }));
+                touch('name');
+                clearServerError('name');
+                setSaveError(null);
+              }}
+            />
+          </section>
 
-        <section className="edit-section" aria-labelledby="stages-title">
-          <div className="edit-section__head">
-            <h2 id="stages-title" className="section__title">
-              단계 <span className="list-count num">{draft.stages.length}</span>
-            </h2>
-            {draft.stages.length > 1 && <p className="edit-section__hint">손잡이(⋮⋮)를 끌어 순서를 바꿀 수 있어요.</p>}
+          <section className="edit-section" aria-labelledby="stages-title">
+            <div className="edit-section__head">
+              <h2 id="stages-title" className="section__title">
+                단계 <span className="list-count num">{draft.stages.length}</span>
+              </h2>
+              {draft.stages.length > 1 && <p className="edit-section__hint">손잡이(⋮⋮)를 끌어 순서를 바꿀 수 있어요.</p>}
+            </div>
+
+            {draft.stages.length === 0 ? (
+              <div className="stage-empty" data-error-anchor={stagesError ? true : undefined} tabIndex={-1}>
+                <p>아직 단계가 없어요.</p>
+                <p className="text-3">‘단계 추가’를 누르거나 빠른 입력으로 여러 단계를 한 번에 만들 수 있어요.</p>
+                {stagesError && <FieldError>{stagesError}</FieldError>}
+              </div>
+            ) : (
+              <ol className={['stage-list', drag && 'stage-list--dragging'].filter(Boolean).join(' ')}>
+                {draft.stages.map((stage, index) => (
+                  <StageRow
+                    key={stage.key}
+                    stage={stage}
+                    index={index}
+                    total={draft.stages.length}
+                    errors={stageErrorsFor(stage)}
+                    canDuplicate={!atStageLimit}
+                    dragging={drag?.key === stage.key}
+                    style={rowStyle(stage.key, index)}
+                    rowRef={registerRow(stage.key)}
+                    handleProps={handleProps(stage.key)}
+                    onChange={(patch) => updateStage(stage.key, patch)}
+                    onMove={(delta, focus) => moveBy(stage.key, delta, focus)}
+                    onDuplicate={() => duplicateStage(stage.key)}
+                    onDelete={() => deleteStage(stage.key)}
+                  />
+                ))}
+              </ol>
+            )}
+
+            {stagesError && draft.stages.length > 0 && (
+              <div className="stages-error" data-error-anchor tabIndex={-1}>
+                <FieldError>{stagesError}</FieldError>
+              </div>
+            )}
+
+            <Button block icon="plus" className="add-stage" onClick={addStage} disabled={atStageLimit}>
+              단계 추가
+            </Button>
+            {atStageLimit && <p className="field__hint">단계는 최대 {LIMITS.stagesMax}개까지 만들 수 있어요.</p>}
+          </section>
+        </div>
+
+        <div className="edit-side">
+          <div
+            ref={barRef}
+            className={['edit-bar', keyboardOpen && 'edit-bar--static'].filter(Boolean).join(' ')}
+          >
+            {saveError && (
+              <InlineAlert
+                tone="error"
+                className="edit-bar__alert"
+                title="저장하지 못했어요. 입력한 내용은 그대로 있어요."
+                onDismiss={() => setSaveError(null)}
+              >
+                {saveError}
+              </InlineAlert>
+            )}
+            {shownErrorCount > 0 && (
+              <button type="button" className="edit-bar__errors" onClick={focusFirstError}>
+                <Icon name="alert" size={16} />
+                입력 오류 {shownErrorCount}개를 확인해 주세요
+              </button>
+            )}
+            <div className="edit-bar__row">
+              <div className="edit-bar__total">
+                <span className="edit-bar__label">총 계획 시간</span>
+                <span className="edit-bar__value">
+                  {durationText(totalSec)}
+                  <span className="edit-bar__count"> · {draft.stages.length}단계</span>
+                </span>
+              </div>
+              <Button
+                variant="primary"
+                size="lg"
+                icon={saveError ? 'refresh' : 'check'}
+                loading={saving}
+                onClick={save}
+                className="edit-bar__save"
+              >
+                {saving ? '저장 중…' : saveError ? '다시 저장' : '저장'}
+              </Button>
+            </div>
           </div>
-
-          {draft.stages.length === 0 ? (
-            <div className="stage-empty" data-error-anchor={stagesError ? true : undefined} tabIndex={-1}>
-              <p>아직 단계가 없어요.</p>
-              <p className="text-3">‘단계 추가’를 누르거나 빠른 입력으로 여러 단계를 한 번에 만들 수 있어요.</p>
-              {stagesError && <FieldError>{stagesError}</FieldError>}
-            </div>
-          ) : (
-            <ol className={['stage-list', drag && 'stage-list--dragging'].filter(Boolean).join(' ')}>
-              {draft.stages.map((stage, index) => (
-                <StageRow
-                  key={stage.key}
-                  stage={stage}
-                  index={index}
-                  total={draft.stages.length}
-                  errors={stageErrorsFor(stage)}
-                  canDuplicate={!atStageLimit}
-                  dragging={drag?.key === stage.key}
-                  style={rowStyle(stage.key, index)}
-                  rowRef={registerRow(stage.key)}
-                  handleProps={handleProps(stage.key)}
-                  onChange={(patch) => updateStage(stage.key, patch)}
-                  onMove={(delta, focus) => moveBy(stage.key, delta, focus)}
-                  onDuplicate={() => duplicateStage(stage.key)}
-                  onDelete={() => deleteStage(stage.key)}
-                />
-              ))}
-            </ol>
-          )}
-
-          {stagesError && draft.stages.length > 0 && (
-            <div className="stages-error" data-error-anchor tabIndex={-1}>
-              <FieldError>{stagesError}</FieldError>
-            </div>
-          )}
-
-          <Button block icon="plus" className="add-stage" onClick={addStage} disabled={atStageLimit}>
-            단계 추가
-          </Button>
-          {atStageLimit && <p className="field__hint">단계는 최대 {LIMITS.stagesMax}개까지 만들 수 있어요.</p>}
 
           <div className="quick">
             <button
@@ -603,47 +651,6 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
                 </Button>
               </div>
             </div>
-          </div>
-        </section>
-
-        <div
-          ref={barRef}
-          className={['edit-bar', keyboardOpen && 'edit-bar--static'].filter(Boolean).join(' ')}
-        >
-          {saveError && (
-            <InlineAlert
-              tone="error"
-              className="edit-bar__alert"
-              title="저장하지 못했어요. 입력한 내용은 그대로 있어요."
-              onDismiss={() => setSaveError(null)}
-            >
-              {saveError}
-            </InlineAlert>
-          )}
-          {shownErrorCount > 0 && (
-            <button type="button" className="edit-bar__errors" onClick={focusFirstError}>
-              <Icon name="alert" size={16} />
-              입력 오류 {shownErrorCount}개를 확인해 주세요
-            </button>
-          )}
-          <div className="edit-bar__row">
-            <div className="edit-bar__total">
-              <span className="edit-bar__label">총 계획 시간</span>
-              <span className="edit-bar__value">
-                {durationText(totalSec)}
-                <span className="edit-bar__count"> · {draft.stages.length}단계</span>
-              </span>
-            </div>
-            <Button
-              variant="primary"
-              size="lg"
-              icon={saveError ? 'refresh' : 'check'}
-              loading={saving}
-              onClick={save}
-              className="edit-bar__save"
-            >
-              {saving ? '저장 중…' : saveError ? '다시 저장' : '저장'}
-            </Button>
           </div>
         </div>
       </main>

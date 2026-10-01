@@ -5,6 +5,7 @@ import { EmptyState } from '../components/EmptyState';
 import { Icon, type IconName } from '../components/Icon';
 import { InlineAlert } from '../components/InlineAlert';
 import { Modal } from '../components/Modal';
+import { APP_CONFIG } from '../config';
 import { settingsStore, useSettings } from '../data/settingsStore';
 import {
   ADJUST_STEP_MS,
@@ -108,6 +109,11 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
     const timer = window.setInterval(() => setNow(Date.now()), TICK_MS);
     return () => window.clearInterval(timer);
   }, [game.runningSince]);
+
+  // 브라우저 탭·최근 앱 목록에서도 어떤 시나리오를 진행 중인지 보이게 한다.
+  useEffect(() => {
+    document.title = `${game.scenarioName} · ${APP_CONFIG.name}`;
+  }, [game.scenarioName]);
 
   useEffect(() => {
     const onVisible = () => setNow(Date.now());
@@ -215,15 +221,15 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
   return (
     <main className="screen play" data-tone={tone} data-paused={!running}>
       <header className="play-top">
-        <div className="play-top__info">
-          <p className="play-top__scenario">{game.scenarioName}</p>
-          <p className="play-top__step">
-            <span className="num">
-              {game.current + 1} / {game.stages.length}
-            </span>
-            <span className="visually-hidden">단계</span>
-          </p>
-        </div>
+        <p className="play-top__step" aria-label={`전체 ${game.stages.length}단계 중 ${game.current + 1}단계`}>
+          <span className="num">
+            {game.current + 1} / {game.stages.length}
+          </span>
+        </p>
+        {/* 시나리오(머더미스터리) 이름은 진행 중 항상 보인다. 길면 두 줄까지 줄바꿈한다. */}
+        <p className="play-top__scenario" title={game.scenarioName}>
+          {game.scenarioName}
+        </p>
         <div className="play-top__actions">
           {fullscreen.supported && (
             <Button
@@ -452,7 +458,7 @@ function StageListSheet({ game, now, open, onClose }: { game: GameState; now: nu
       title="단계 목록"
       subtitle={`${game.stages.length}단계 · 계획 ${durationText(plannedTotal)}`}
     >
-      <ol className="play-list">
+      <ol className={['play-list', game.stages.length > 6 && 'play-list--columns'].filter(Boolean).join(' ')}>
         {game.stages.map((s, i) => {
           const isCurrent = i === game.current;
           const actualMs = game.actualMs[i] + (isCurrent ? segmentElapsedMs(game, now) : 0);

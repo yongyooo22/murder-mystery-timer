@@ -12,14 +12,20 @@ const BASE = process.env.BASE_URL ?? 'http://localhost:8787';
 const OUT = process.env.OUT_DIR ?? 'e2e/screenshots';
 const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 
+// 가로 화면을 주로 쓰므로 가로 크기를 넉넉히 점검한다(세로도 깨지지 않는지 함께 본다).
 const VIEWPORTS = {
+  mLand: { width: 844, height: 390 }, // iPhone 14 가로
+  maxLand: { width: 932, height: 430 }, // iPhone Pro Max 가로
+  aLand: { width: 915, height: 412 }, // Android 가로
+  seLand: { width: 667, height: 375 }, // iPhone SE 가로
+  smallLand: { width: 640, height: 360 }, // 작은 Android 가로
+  tabL: { width: 1024, height: 768 }, // iPad 가로
+  tabAirL: { width: 1180, height: 820 }, // iPad Air 가로
+  tabProL: { width: 1366, height: 1024 }, // iPad Pro 12.9 가로
   m360: { width: 360, height: 740 },
   m390: { width: 390, height: 844 },
-  tabP: { width: 768, height: 1024 },
-  tabL: { width: 1024, height: 768 },
-  mLand: { width: 844, height: 390 },
   seP: { width: 375, height: 667 },
-  smallLand: { width: 640, height: 360 },
+  tabP: { width: 768, height: 1024 },
 };
 
 const LONG_NAME = '비 오는 밤 외딴 산장에서 벌어진 의문의 연쇄 사건과 사라진 유언장의 비밀';
@@ -136,6 +142,13 @@ async function inspect(page, name) {
         small.push(`주요버튼 ${(el.textContent || '').trim().slice(0, 16)} ${Math.round(r.height)}px`);
       }
     }
+    // 진행 화면에서는 시나리오 이름이 늘 보여야 한다.
+    const scenarioName = document.querySelector('.play-top__scenario');
+    if (document.querySelector('.play') && scenarioName) {
+      const r = scenarioName.getBoundingClientRect();
+      const visible = r.width > 20 && r.height > 10 && r.top >= 0 && r.bottom <= window.innerHeight && getComputedStyle(scenarioName).visibility !== 'hidden';
+      if (!visible || !scenarioName.textContent.trim()) small.push('시나리오 이름 안 보임');
+    }
     const overlaps = [];
     const timer = document.querySelector('.play-timer__digits');
     if (timer) {
@@ -176,7 +189,7 @@ async function run() {
 
   for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
     if (ONLY && !ONLY.test(vpName)) continue;
-    const context = await browser.newContext({ viewport, hasTouch: true, isMobile: vpName !== 'tabL', locale: 'ko-KR', serviceWorkers: 'block' });
+    const context = await browser.newContext({ viewport, hasTouch: true, isMobile: !vpName.startsWith('tab'), locale: 'ko-KR', serviceWorkers: 'block' });
     const page = await context.newPage();
     const shot = (n) => inspect(page, `${vpName}-${n}`);
     const setStorage = (key, value) =>
@@ -294,10 +307,11 @@ async function run() {
     await shot('edit-many');
 
     // 진행 화면 상태들
+    // 해시만 바꾸면 같은 문서에서 이동하므로(진행 중인 게임이 없으면 목록으로 돌아감) 쿼리를 바꿔 새로 연다.
+    const openFresh = (hash) => page.goto(`${BASE}/?fresh=${Date.now()}${hash}`);
     const play = async (n, state) => {
       await setStorage('mt:game:v1', state);
-      await page.goto(`${BASE}/#/play`);
-      await page.reload();
+      await openFresh('#/play');
       await page.waitForSelector('.play-timer__digits');
       await shot(n);
     };
@@ -320,8 +334,7 @@ async function run() {
 
     // 결과
     await setStorage('mt:result:v1', resultState());
-    await page.goto(`${BASE}/#/result`);
-    await page.reload();
+    await openFresh('#/result');
     await page.waitForSelector('.result-summary');
     await shot('result');
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
