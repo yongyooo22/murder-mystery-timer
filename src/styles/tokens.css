@@ -57,17 +57,13 @@
   --c-progress-track: rgba(244, 241, 234, 0.12);
 
   /*
-   * 글꼴
-   * - 명조: 시나리오 제목·현재 단계 이름. iOS에는 기본 한글 명조가 없어 본명조(Noto Serif KR)를 함께 싣는다.
-   * - 산세리프: 일반 정보와 버튼. 기기마다 모양이 달라지지 않도록 Pretendard를 싣고, 없으면 시스템 글꼴을 쓴다.
-   * - 숫자: 산세리프 + tabular-nums. 큰 타이머는 글자 칸 너비도 고정한다(PlayScreen).
-   * 두 웹 글꼴 모두 글자 범위별로 나뉘어 있어 화면에 실제로 쓰인 글자 묶음만 내려받는다.
+   * 글꼴: 모든 글자를 본명조(Noto Serif KR) 하나로 통일한다.
+   * iOS에는 기본 한글 명조가 없어 본명조를 함께 싣는다. 글자 범위별로 나뉘어 있어 화면에 실제로 쓰인 글자 묶음만 내려받는다.
+   * 숫자는 tabular-nums. 큰 타이머는 글자 칸 너비도 고정한다(PlayScreen).
    */
   --font-serif: 'Noto Serif KR Variable', 'Noto Serif KR', 'AppleMyungjo', 'Batang', '바탕', serif;
-  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo',
-    'Noto Sans KR', 'Noto Sans CJK KR', 'Malgun Gothic', '맑은 고딕', Roboto, 'Segoe UI', sans-serif;
-  --font-digits: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI',
-    Roboto, 'Helvetica Neue', Arial, var(--font-sans);
+  --font-sans: var(--font-serif);
+  --font-digits: var(--font-serif);
 
   --fs-12: 0.75rem;
   --fs-13: 0.8125rem;
