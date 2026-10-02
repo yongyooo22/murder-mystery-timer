@@ -8,9 +8,9 @@
   gap: var(--sp-2);
   width: 100%;
   max-width: var(--content-max);
-  min-height: 60px;
+  min-height: 56px;
   margin: 0 auto;
-  padding: var(--sp-2) calc(var(--gutter) - var(--sp-2));
+  padding: var(--sp-1) calc(var(--gutter) - var(--sp-2));
 }
 
 .topbar__left,
@@ -25,8 +25,8 @@
   flex: 1;
   min-width: 0;
   padding: 0 var(--sp-2);
-  font-size: var(--fs-20);
-  font-weight: var(--fw-bold);
+  font-size: var(--fs-17);
+  font-weight: var(--fw-semibold);
   line-height: var(--lh-tight);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -35,4 +35,12 @@
 
 .topbar__left + .topbar__title {
   padding-left: 0;
+}
+
+/* 앱 이름: 작고 자간이 넓은 영문 대문자 */
+.topbar--brand .topbar__title {
+  font-size: var(--fs-13);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-text);
 }

@@ -33,7 +33,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   },
   ref,
 ) {
-  const iconSize = size === 'xl' ? 24 : size === 'sm' ? 18 : 20;
+  const iconSize = size === 'xl' ? 22 : size === 'sm' ? 18 : 20;
   const classes = ['btn', `btn--${variant}`, `btn--${size}`, block && 'btn--block', className].filter(Boolean).join(' ');
   return (
     <button

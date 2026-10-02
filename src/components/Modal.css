@@ -1,3 +1,4 @@
+/* 대화상자·시트: 화면과 같은 차콜 면에 절제된 테두리. 뒤 화면은 어둡게 가린다. */
 .modal-root {
   position: fixed;
   inset: 0;
@@ -12,13 +13,12 @@
 }
 
 .modal {
-  --c-input-bg: var(--c-input-bg-sunken);
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 440px;
   max-height: 100%;
-  background: var(--c-surface);
+  background: var(--c-bg);
   border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-pop);
@@ -39,14 +39,14 @@
 }
 
 .modal__title {
-  font-size: var(--fs-20);
+  font-size: var(--fs-18);
   font-weight: var(--fw-semibold);
   line-height: var(--lh-tight);
 }
 
 .modal__subtitle {
-  margin-top: var(--sp-1);
-  font-size: var(--fs-15);
+  margin-top: 6px;
+  font-size: var(--fs-14);
   color: var(--c-text-2);
 }
 
@@ -60,6 +60,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--sp-3) var(--sp-5) var(--sp-5);
+  font-size: var(--fs-15);
   color: var(--c-text-2);
 }
 
@@ -67,7 +68,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
-  padding: var(--sp-3) var(--sp-5) var(--sp-5);
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
   border-top: 1px solid var(--c-divider);
 }
 

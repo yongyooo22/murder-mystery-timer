@@ -1,3 +1,7 @@
+/*
+ * 버튼: 모서리가 살짝 둥근 직사각형. 화면마다 주요 동작 하나만 버건디로 채우고,
+ * 나머지는 차콜 배경의 테두리 버튼이나 글자 버튼으로 둔다. 터치 영역은 최소 44×44.
+ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -5,11 +9,11 @@
   gap: var(--sp-2);
   min-width: var(--tap-min);
   min-height: var(--h-control);
-  padding: var(--sp-2) var(--sp-5);
+  padding: var(--sp-2) var(--sp-4);
   border: 1px solid transparent;
-  border-radius: var(--r-md);
-  font-size: var(--fs-16);
-  font-weight: var(--fw-semibold);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-15);
+  font-weight: var(--fw-medium);
   line-height: var(--lh-tight);
   text-align: center;
   user-select: none;
@@ -29,19 +33,23 @@
 .btn--sm {
   min-height: var(--tap-min);
   padding: var(--sp-1) var(--sp-3);
-  font-size: var(--fs-15);
+  font-size: var(--fs-14);
   gap: 6px;
 }
 
 .btn--lg {
   min-height: var(--h-primary);
-  font-size: var(--fs-17);
+  padding-left: var(--sp-5);
+  padding-right: var(--sp-5);
+  font-size: var(--fs-16);
 }
 
 .btn--xl {
   min-height: var(--h-primary-xl);
-  font-size: var(--fs-20);
-  gap: var(--sp-3);
+  padding-left: var(--sp-6);
+  padding-right: var(--sp-6);
+  font-size: var(--fs-17);
+  gap: var(--sp-2);
 }
 
 .btn--block {
@@ -49,10 +57,11 @@
   width: 100%;
 }
 
-/* 주요 버튼: 골드 */
+/* 주요 버튼: 버건디 면 + 아이보리 글자(5.9:1) */
 .btn--primary {
   background: var(--c-accent);
   color: var(--c-on-accent);
+  font-weight: var(--fw-semibold);
 }
 .btn--primary:hover:not(:disabled) {
   background: var(--c-accent-hover);
@@ -61,39 +70,46 @@
   background: var(--c-accent-pressed);
 }
 
-/* 보조 버튼: 면 + 테두리 */
+/* 보조 버튼: 차콜 배경 + 테두리 */
 .btn--secondary {
-  background: var(--c-surface);
+  background: transparent;
   border-color: var(--c-border-strong);
   color: var(--c-text);
 }
 .btn--secondary:hover:not(:disabled) {
-  background: var(--c-surface-raised);
+  background: var(--c-surface-hover);
+  border-color: var(--c-border-hover);
 }
 .btn--secondary:active:not(:disabled) {
-  background: var(--c-surface-hover);
+  background: var(--c-surface-pressed);
 }
 
-/* 약한 버튼: 배경 없음 */
+/* 글자 버튼: 테두리 없음 */
 .btn--ghost {
   background: transparent;
   color: var(--c-text-2);
 }
 .btn--ghost:hover:not(:disabled) {
-  background: var(--c-surface);
+  background: var(--c-surface-hover);
   color: var(--c-text);
 }
 .btn--ghost:active:not(:disabled) {
-  background: var(--c-surface-raised);
+  background: var(--c-surface-pressed);
 }
 
-/* 삭제·종료 확인용 */
+/*
+ * 삭제·종료처럼 되돌리기 어려운 동작. 주요 버튼(버건디)과 헷갈리지 않도록 면을 채우지 않고
+ * 붉은 테두리와 글자로 구분한다.
+ */
 .btn--danger {
-  background: var(--c-danger);
-  color: var(--c-on-danger);
+  background: var(--c-danger-soft);
+  border-color: var(--c-danger-line);
+  color: var(--c-danger);
+  font-weight: var(--fw-semibold);
 }
 .btn--danger:hover:not(:disabled) {
-  background: var(--c-danger-hover);
+  background: rgba(244, 114, 101, 0.16);
+  border-color: var(--c-danger);
 }
 
 .btn--danger-outline {
@@ -105,16 +121,21 @@
   background: var(--c-danger-soft);
 }
 
-/* 비활성: 글자는 읽을 수 있는 밝기로 유지하고 면·테두리로 구분한다. */
+/* 비활성: 글자는 읽을 수 있는 밝기로 두고 테두리를 흐리게 해 구분한다. */
 .btn:disabled {
-  background: var(--c-disabled-bg);
-  border-color: transparent;
+  background: transparent;
+  border-color: var(--c-divider);
   color: var(--c-text-disabled);
 }
-.btn--ghost:disabled,
-.btn--danger-outline:disabled {
-  background: transparent;
+.btn--ghost:disabled {
   border-color: transparent;
+}
+/* 저장 중(스피너)에는 색을 바꾸지 않아 깜빡이지 않게 한다. */
+.btn--primary[aria-busy='true']:disabled {
+  background: var(--c-accent);
+  border-color: transparent;
+  color: var(--c-on-accent);
+  opacity: 0.85;
 }
 .btn[aria-busy='true'] {
   cursor: progress;
@@ -126,7 +147,7 @@
   justify-content: center;
   width: var(--tap-min);
   height: var(--tap-min);
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   color: var(--c-text-2);
   touch-action: manipulation;
   transition:
@@ -134,15 +155,14 @@
     color var(--dur-fast);
 }
 .icon-btn:hover:not(:disabled) {
-  background: var(--c-surface);
+  background: var(--c-surface-hover);
   color: var(--c-text);
 }
 .icon-btn:active:not(:disabled) {
-  background: var(--c-surface-raised);
+  background: var(--c-surface-pressed);
 }
 .icon-btn--secondary {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
+  border: 1px solid var(--c-border-strong);
 }
 .icon-btn:disabled {
   color: var(--c-text-disabled);

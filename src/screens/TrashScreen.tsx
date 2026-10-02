@@ -103,7 +103,7 @@ export function TrashScreen() {
         )}
 
         {state.status === 'loading' && (
-          <div className="trash-loading" role="status">
+          <div className="trash-loading loading-line" role="status">
             <Spinner size={22} />
             <span>불러오는 중…</span>
           </div>
@@ -138,7 +138,7 @@ export function TrashScreen() {
               return (
                 <li key={scenario.id} className="trash-row">
                   <div className="trash-row__text">
-                    <p className="trash-row__name">{scenario.name}</p>
+                    <p className="trash-row__name serif">{scenario.name}</p>
                     <p className="trash-row__meta">
                       {scenario.stages.length}단계 · {durationText(sumDurationSec(scenario.stages))} ·{' '}
                       {relativeTimeText(deletedAt)} 삭제

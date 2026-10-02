@@ -36,6 +36,7 @@ function appMeta(): Plugin {
     transformIndexHtml(html) {
       return html
         .replaceAll('%APP_NAME%', APP_CONFIG.name)
+        .replaceAll('%APP_SHORT_NAME%', APP_CONFIG.shortName)
         .replaceAll('%APP_DESCRIPTION%', APP_CONFIG.description)
         .replaceAll('%THEME_COLOR%', APP_CONFIG.themeColor);
     },

@@ -12,8 +12,8 @@
 }
 
 .field__label {
-  font-size: var(--fs-15);
-  font-weight: var(--fw-semibold);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
   color: var(--c-text-2);
 }
 
@@ -26,23 +26,26 @@
   color: var(--c-danger);
 }
 
+/* 입력칸: 배경보다 조금 어두운 면 + 3:1 테두리, 살짝 둥근 모서리 */
 .input {
   width: 100%;
   min-height: var(--h-control);
-  padding: 10px 14px;
+  padding: 10px 12px;
   background: var(--c-input-bg);
   border: 1px solid var(--c-border-strong);
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   color: var(--c-text);
-  font-size: var(--fs-17);
+  font-size: var(--fs-16);
   line-height: var(--lh-tight);
-  transition: border-color var(--dur-fast);
+  transition:
+    border-color var(--dur-fast),
+    box-shadow var(--dur-fast);
 }
 
 /* 모바일에서 확대되지 않도록 입력 글자는 16px 이상 */
 textarea.input {
   min-height: 140px;
-  padding: 12px 14px;
+  padding: 12px;
   font-size: var(--fs-16);
   line-height: var(--lh-normal);
   resize: vertical;
@@ -58,8 +61,8 @@ textarea.input {
 }
 
 .input:focus {
-  border-color: var(--c-accent);
-  box-shadow: 0 0 0 1px var(--c-accent);
+  border-color: var(--c-text);
+  box-shadow: 0 0 0 1px var(--c-text);
   outline: none;
 }
 
@@ -72,7 +75,7 @@ textarea.input {
 }
 
 .field__hint {
-  font-size: var(--fs-14);
+  font-size: var(--fs-13);
   color: var(--c-text-3);
 }
 

@@ -72,7 +72,9 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             시나리오 목록과 휴지통은 서버에 저장되어 모든 사용자에게 공유돼요. 설정과 진행 중인 게임은 이 기기에만
             저장돼요.
           </p>
-          <p className="settings__version">{APP_CONFIG.name}</p>
+          <p className="settings__version" lang="en">
+            {APP_CONFIG.name}
+          </p>
         </section>
       </div>
     </Modal>

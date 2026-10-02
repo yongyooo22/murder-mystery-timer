@@ -5,8 +5,16 @@
   padding: var(--sp-4) 0;
 }
 
+/* 시트 제목은 시나리오 이름이므로 명조 */
+.detail-title {
+  display: block;
+  font-size: var(--fs-22);
+  font-weight: var(--fw-medium);
+  color: var(--c-text);
+}
+
 .stage-preview {
-  counter-reset: none;
+  border-top: 1px solid var(--c-divider);
 }
 
 .stage-preview__row {
@@ -19,26 +27,21 @@
   color: var(--c-text);
 }
 
-.stage-preview__row:last-child {
-  border-bottom: 0;
-}
-
 .stage-preview__index {
-  flex: 0 0 2ch;
-  text-align: right;
-  font-size: var(--fs-14);
+  flex: 0 0 2.4ch;
+  font-size: var(--fs-13);
   color: var(--c-text-3);
 }
 
 .stage-preview__name {
   flex: 1;
   min-width: 0;
-  font-size: var(--fs-16);
+  font-size: var(--fs-15);
 }
 
 .stage-preview__time {
   flex-shrink: 0;
-  font-size: var(--fs-16);
+  font-size: var(--fs-15);
   color: var(--c-text-2);
 }
 
@@ -47,9 +50,6 @@
   .stage-preview--columns {
     columns: 2;
     column-gap: var(--sp-8);
-  }
-
-  .stage-preview--columns .stage-preview__row:last-child {
-    border-bottom: 1px solid var(--c-divider);
+    border-top: 0;
   }
 }

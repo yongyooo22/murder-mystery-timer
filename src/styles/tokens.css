@@ -1,62 +1,75 @@
 /*
  * 디자인 토큰. 색·글자·간격·모서리·높이는 여기서만 정의하고 컴포넌트는 토큰을 참조한다.
- * 대비(배경 #15171C 기준): 본문 15.7:1, 보조 10.5:1, 안내 7.4:1, 비활성 5.4:1, 골드 9.2:1, 앰버 8.8:1, 빨강 6.3:1
+ * 차콜 배경, 아이보리 글자, 버건디 강조. 장식 대신 얇은 구분선과 여백으로 정리한다.
+ * 대비(배경 #202123 기준): 본문 14.3:1, 보조 8.9:1, 안내 6.5:1, 비활성 4.7:1, 앰버 8.3:1, 빨강 5.7:1,
+ * 버건디 버튼 위 아이보리 5.9:1. 버건디(#983F4E)는 배경 대비가 낮아(2.4:1) 글자색으로 쓰지 않고
+ * 면(주요 버튼)과 선(현재 단계 표시)에만 쓴다. 강조 글자가 필요하면 --c-accent-text를 쓴다.
  */
 :root {
   color-scheme: dark;
 
-  /* 배경·면 */
-  --c-bg: #15171c;
-  --c-surface: #20232b;
-  --c-surface-raised: #2a2e38;
-  --c-surface-hover: #262a33;
-  --c-overlay: rgba(8, 9, 12, 0.72);
+  /* 배경·면: 같은 차콜을 쓰고 면 대신 선으로 나눈다. */
+  --c-bg: #202123;
+  --c-surface: #26272a;
+  --c-surface-raised: #2a2b2e;
+  --c-surface-hover: rgba(244, 241, 234, 0.06);
+  --c-surface-pressed: rgba(244, 241, 234, 0.1);
+  --c-overlay: rgba(10, 10, 11, 0.7);
 
   /* 선 */
-  --c-divider: #2c3039;
-  --c-border: #3a3f4c;
-  --c-border-strong: #5f6576;
-  --c-border-hover: #737a8c;
+  --c-divider: #36373b;
+  --c-border: #4b4c51;
+  /* 테두리 버튼·입력칸: 배경 대비 3:1 */
+  --c-border-strong: #6a6b71;
+  --c-border-hover: #8a8b91;
 
   /* 글자 */
-  --c-text: #f3f0e8;
-  --c-text-2: #cbc6ba;
-  --c-text-3: #aba69b;
-  --c-text-disabled: #918d85;
+  --c-text: #f4f1ea;
+  --c-text-2: #bfc0c3;
+  --c-text-3: #a3a4a9;
+  --c-text-disabled: #8c8d92;
 
-  /* 강조(골드) */
-  --c-accent: #d8b477;
-  --c-accent-hover: #e3c48f;
-  --c-accent-pressed: #c9a466;
-  --c-accent-soft: rgba(216, 180, 119, 0.14);
-  --c-accent-line: rgba(216, 180, 119, 0.45);
-  --c-on-accent: #1b1812;
+  /* 강조(버건디) */
+  --c-accent: #983f4e;
+  --c-accent-hover: #a64958;
+  --c-accent-pressed: #8a3745;
+  /* 차콜 위의 선·막대(현재 단계 표시, 진행 바): 배경 대비 3:1 이상 */
+  --c-accent-line: #b45567;
+  /* 차콜 위의 강조 글자(링크·라벨) */
+  --c-accent-text: #e3a3ae;
+  --c-accent-soft: rgba(152, 63, 78, 0.18);
+  --c-on-accent: #f4f1ea;
 
   /* 상태 */
-  --c-amber: #f5a524;
-  --c-amber-soft: rgba(245, 165, 36, 0.14);
+  --c-amber: #f0ae45;
+  --c-amber-soft: rgba(240, 174, 69, 0.1);
+  --c-amber-line: rgba(240, 174, 69, 0.45);
   --c-danger: #f47265;
   --c-danger-hover: #f88a7f;
-  --c-danger-soft: rgba(244, 114, 101, 0.13);
-  --c-danger-line: rgba(244, 114, 101, 0.5);
-  --c-on-danger: #1b1812;
-  --c-success: #7dcb9b;
-  --c-success-soft: rgba(125, 203, 155, 0.13);
-  --c-info: #a9c2e8;
-  --c-info-soft: rgba(169, 194, 232, 0.12);
+  --c-danger-soft: rgba(244, 114, 101, 0.1);
+  --c-danger-line: rgba(244, 114, 101, 0.6);
+  --c-success: #8fcb9f;
+  --c-success-soft: rgba(143, 203, 159, 0.1);
 
-  --c-focus: #e9cf9c;
-  --c-disabled-bg: #2a2d35;
-  --c-input-bg: var(--c-surface);
-  --c-input-bg-sunken: #191b21;
+  --c-focus: #f4f1ea;
+  --c-disabled-bg: transparent;
+  --c-input-bg: #1b1c1e;
+  --c-progress-track: rgba(244, 241, 234, 0.12);
 
-  /* 글꼴: 시스템 한글 산세리프 */
-  --font-sans: -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕',
-    'Noto Sans KR', 'Noto Sans CJK KR', Roboto, 'Segoe UI', sans-serif;
-  /* 숫자는 라틴 시스템 글꼴을 먼저 써서 폭이 일정한 숫자(tabular-nums)를 확실히 적용한다. */
-  --font-digits: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    var(--font-sans);
+  /*
+   * 글꼴
+   * - 명조: 시나리오 제목·현재 단계 이름. iOS에는 기본 한글 명조가 없어 본명조(Noto Serif KR)를 함께 싣는다.
+   * - 산세리프: 일반 정보와 버튼. 기기마다 모양이 달라지지 않도록 Pretendard를 싣고, 없으면 시스템 글꼴을 쓴다.
+   * - 숫자: 산세리프 + tabular-nums. 큰 타이머는 글자 칸 너비도 고정한다(PlayScreen).
+   * 두 웹 글꼴 모두 글자 범위별로 나뉘어 있어 화면에 실제로 쓰인 글자 묶음만 내려받는다.
+   */
+  --font-serif: 'Noto Serif KR Variable', 'Noto Serif KR', 'AppleMyungjo', 'Batang', '바탕', serif;
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo',
+    'Noto Sans KR', 'Noto Sans CJK KR', 'Malgun Gothic', '맑은 고딕', Roboto, 'Segoe UI', sans-serif;
+  --font-digits: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, var(--font-sans);
 
+  --fs-12: 0.75rem;
   --fs-13: 0.8125rem;
   --fs-14: 0.875rem;
   --fs-15: 0.9375rem;
@@ -74,7 +87,12 @@
   --fw-bold: 700;
 
   --lh-tight: 1.25;
-  --lh-normal: 1.5;
+  --lh-normal: 1.55;
+  --lh-serif: 1.35;
+
+  /* 영문 소제목(앱 이름)과 작은 라벨의 자간 */
+  --ls-caps: 0.16em;
+  --ls-label: 0.04em;
 
   /* 간격 */
   --sp-1: 4px;
@@ -87,16 +105,16 @@
   --sp-10: 40px;
   --sp-12: 48px;
 
-  /* 모서리 */
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-pill: 999px;
+  /* 모서리: 살짝 둥근 직사각형. 알약 모양은 쓰지 않는다. */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
 
-  /* 조작 요소 높이 */
+  /* 조작 요소 높이(터치 영역은 최소 44×44) */
   --tap-min: 44px;
-  --h-control: 48px;
-  --h-primary: 52px;
-  --h-primary-xl: 60px;
+  --h-control: 44px;
+  --h-primary: 48px;
+  --h-primary-xl: 56px;
 
   /* 레이아웃 */
   --content-max: 720px;
@@ -117,7 +135,7 @@
   --z-modal: 50;
   --z-toast: 60;
 
-  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
 @media (min-width: 600px) {

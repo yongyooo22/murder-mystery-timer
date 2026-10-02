@@ -4,21 +4,12 @@
 
 .trash-desc {
   padding: var(--sp-4) 0;
-  font-size: var(--fs-15);
+  font-size: var(--fs-14);
   color: var(--c-text-2);
 }
 
 .trash-alert {
   margin-bottom: var(--sp-3);
-}
-
-.trash-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-3);
-  padding: var(--sp-12) 0;
-  color: var(--c-text-2);
 }
 
 .trash-list {
@@ -40,13 +31,13 @@
 }
 
 .trash-row__name {
-  font-size: var(--fs-17);
-  font-weight: var(--fw-semibold);
-  line-height: 1.35;
+  font-size: var(--fs-18);
+  color: var(--c-text-2);
 }
 
 .trash-row__meta {
-  font-size: var(--fs-14);
+  margin-top: 2px;
+  font-size: var(--fs-13);
   color: var(--c-text-3);
 }
 
