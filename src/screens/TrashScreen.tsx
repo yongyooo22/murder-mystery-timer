@@ -91,10 +91,9 @@ export function TrashScreen() {
         }
       />
       <main className="screen__body">
-        <p className="trash-desc">
-          휴지통도 모든 사용자에게 공유돼요.
-          {retentionDays !== null && ` 휴지통에 들어온 지 ${retentionDays}일이 지나면 자동으로 영구 삭제돼요.`}
-        </p>
+        {retentionDays !== null && (
+          <p className="trash-desc">휴지통에 들어온 지 {retentionDays}일이 지나면 자동으로 영구 삭제돼요.</p>
+        )}
 
         {actionError && (
           <InlineAlert tone="error" className="trash-alert" onDismiss={() => setActionError(null)}>

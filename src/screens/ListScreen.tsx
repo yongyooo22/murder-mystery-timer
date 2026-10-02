@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import { Button, IconButton } from '../components/Button';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
-import { Icon } from '../components/Icon';
 import { InlineAlert } from '../components/InlineAlert';
 import { Menu } from '../components/Menu';
 import { Spinner } from '../components/Spinner';
@@ -266,10 +265,6 @@ function SyncStatus({ list }: { list: ScenarioListState }) {
   }
   return (
     <div className="sync-line">
-      <p className="sync-line__shared">
-        <Icon name="users" size={16} />
-        <span>모든 사용자에게 공유되는 목록이에요.</span>
-      </p>
       <p className="sync-line__state" role="status">
         {list.status === 'loading' ? '불러오는 중…' : list.syncedAt ? `${timeOfDayText(list.syncedAt)} 기준` : ''}
       </p>

@@ -31,7 +31,6 @@ test('첫 사용: 빈 목록 안내와 새로 만들기·템플릿 사용', asyn
   await expect(page.getByText('저장된 시나리오가 없어요')).toBeVisible();
   await expect(page.getByRole('button', { name: '새로 만들기' })).toBeVisible();
   await expect(page.getByRole('button', { name: '템플릿 사용' })).toBeVisible();
-  await expect(page.getByText('모든 사용자에게 공유되는 목록이에요.')).toBeVisible();
 
   await page.getByRole('button', { name: '‘3차 조사까지’ 템플릿으로 만들기' }).click();
   await expect(page.getByRole('heading', { name: '새 시나리오' })).toBeVisible();

@@ -170,6 +170,18 @@ body.is-playing .toast-region {
   transition: color var(--dur-med);
 }
 
+/* 단계 이름 위의 시나리오 이름: 한 줄로, 길면 말줄임 */
+.play-head__scenario {
+  max-width: 100%;
+  margin-top: var(--sp-4);
+  overflow: hidden;
+  font-size: var(--scenario-size);
+  line-height: var(--lh-tight);
+  color: var(--c-text-2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 /* 단계 이름: 명조. 한 줄이든 두 줄이든 같은 높이를 잡아 아래 숫자가 움직이지 않게 한다. */
 .play-stage {
   display: flex;
@@ -709,6 +721,11 @@ body.is-playing .toast-region {
     --ctrl-gap: var(--sp-2);
   }
 
+  .play-head__scenario {
+    margin-top: 2px;
+    font-size: var(--fs-13);
+  }
+
   .play-brand {
     padding-top: calc(var(--safe-top) + 14px);
   }
@@ -887,6 +904,10 @@ body.is-playing .toast-region {
     min-height: 100dvh;
     padding-left: var(--safe-left);
     padding-right: var(--safe-right);
+  }
+
+  .play-head__scenario {
+    display: none;
   }
 
   .play-brand {

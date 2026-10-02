@@ -337,6 +337,10 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
               <span className="play-status__label">{statusText}</span>
             </span>
           </p>
+          {/* 가로 화면에서 단계 이름 위에 시나리오 이름을 한 번 더 보여 준다(세로는 바로 위 머리글에 있어 숨김). */}
+          <p className="play-head__scenario serif" aria-hidden="true" title={game.scenarioName}>
+            {game.scenarioName}
+          </p>
           {/* 이름이 한 줄이든 두 줄이든 높이를 같게 잡아 숫자 위치가 흔들리지 않게 한다. */}
           <div className="play-stage" data-long={[...stage.name].length > LONG_STAGE_NAME || undefined}>
             <h1 className="play-stage__name serif">{stage.name}</h1>
