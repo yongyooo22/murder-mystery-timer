@@ -90,11 +90,6 @@ const ICONS = {
     { cx: 12, cy: 12, r: 3.5 },
     { d: 'M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6' },
   ],
-  users: [
-    { cx: 9, cy: 8.5, r: 3.2 },
-    { d: 'M3.5 19a5.5 5.5 0 0 1 11 0' },
-    { d: 'M15.8 5.6a3 3 0 0 1 0 5.8M17.5 14.3A5.2 5.2 0 0 1 20.5 19' },
-  ],
 } satisfies Record<string, Shape[]>;
 
 export type IconName = keyof typeof ICONS;

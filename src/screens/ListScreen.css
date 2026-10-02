@@ -18,18 +18,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-end;
   column-gap: var(--sp-3);
   row-gap: 2px;
   margin-top: calc(-1 * var(--sp-1));
   font-size: var(--fs-13);
   color: var(--c-text-3);
-}
-
-.sync-line__shared {
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .sync-line__state {
