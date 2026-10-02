@@ -105,6 +105,16 @@
   margin-right: calc(-1 * var(--sp-3));
 }
 
+/* 맨 아래 제작자 표기 */
+.list-credit {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-6) var(--gutter) var(--sp-5);
+  font-size: var(--fs-12);
+  color: var(--c-text-3);
+  text-align: center;
+}
+
 /* 진행 중인 게임: 카드 대신 짧은 버건디 세로선과 구분선 */
 .resume {
   display: flex;

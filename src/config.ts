@@ -9,4 +9,6 @@ export const APP_CONFIG = {
   shortName: 'Murder Timer',
   description: '머더미스터리 진행용 단계 타이머',
   themeColor: '#202123',
+  /** 목록 화면 맨 아래에 보이는 제작자 표기 */
+  credit: '© 2026 제작: 김연경(earthssaem@gmail.com)',
 } as const;
