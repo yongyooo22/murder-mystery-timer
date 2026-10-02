@@ -4,6 +4,7 @@
  * 결과: e2e/screenshots/*.png, e2e/screenshots/report.json
  *
  * 주의: 서버 데이터를 지우고 점검용 시나리오로 채운다. 점검 전용 DATA_DIR로 띄운 서버에만 실행하세요.
+ * (Redis 저장소로 띄운 서버에서는 실행을 거부한다.)
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
@@ -59,6 +60,11 @@ async function api(method, path, body) {
 }
 
 async function resetData() {
+  // 점검은 데이터를 모두 지우므로 Redis(운영 데이터)에 연결된 서버에서는 실행하지 않는다.
+  const health = await api('GET', '/health');
+  if (health?.storage !== 'file') {
+    throw new Error(`이 서버의 저장소가 '${health?.storage}'예요. 점검은 파일 저장소로 띄운 점검 전용 서버에서만 실행하세요.`);
+  }
   for (const it of (await api('GET', '/scenarios')).items) await api('DELETE', `/scenarios/${it.id}`);
   for (const it of (await api('GET', '/trash')).items) await api('DELETE', `/trash/${it.id}`);
 }

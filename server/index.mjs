@@ -2,6 +2,8 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApp } from './app.mjs';
+import { createRestClient, resolveRedisConfig } from './redis.mjs';
+import { KEY_PREFIX, openRedisStore } from './redis-store.mjs';
 import { openStore } from './store.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -15,11 +17,19 @@ const config = {
   corsOrigin: process.env.CORS_ORIGIN ?? '',
 };
 
-const store = await openStore({ file: config.dataFile, retentionDays: config.retentionDays });
+// Upstash Redis 환경 변수가 있으면 Redis에, 없으면 로컬 파일(data/scenarios.json)에 저장한다.
+// (Vercel 배포는 이 파일이 아니라 api/index.js를 쓰며, 그곳에서는 Redis만 쓴다.)
+const redis = resolveRedisConfig();
+const store = redis
+  ? openRedisStore({ client: createRestClient(redis), retentionDays: config.retentionDays })
+  : await openStore({ file: config.dataFile, retentionDays: config.retentionDays });
 const server = http.createServer(createApp({ store, ...config }));
 
 server.listen(config.port, config.host, () => {
-  console.log(`[server] http://localhost:${config.port} (데이터: ${config.dataFile})`);
+  const storage = redis
+    ? `Upstash Redis(${redis.source}, 키 접두사 ${KEY_PREFIX}:)`
+    : `파일 ${config.dataFile}`;
+  console.log(`[server] http://localhost:${config.port} (저장소: ${storage})`);
 });
 
 async function shutdown(signal) {
