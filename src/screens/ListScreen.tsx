@@ -223,6 +223,8 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
         </section>
       </main>
 
+      <footer className="list-credit">{APP_CONFIG.credit}</footer>
+
       <ScenarioDetailSheet id={detailId} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <RenameDialog scenario={renaming} onClose={() => setRenaming(null)} />
