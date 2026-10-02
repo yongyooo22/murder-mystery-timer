@@ -3,19 +3,22 @@
 친구들과 테이블 위에 휴대폰이나 태블릿 한 대를 두고 함께 보는 머더미스터리 진행용 단계 타이머입니다.
 시나리오(단계 이름 + 시간 목록)를 만들어 두고, 게임 중에는 멀리서도 읽히는 큰 숫자로 남은 시간을 보여 줍니다.
 
-- **시나리오 목록**: 서버에 저장되어 앱을 쓰는 모든 사용자에게 공유됩니다. 새로고침 버튼으로만 다시 불러옵니다(자동 폴링 없음).
+- **시나리오 목록**: 서버에 저장되어 앱을 쓰는 모든 사용자에게 공유됩니다(Vercel 배포: Upstash Redis, 로컬 실행: 파일). 새로고침 버튼으로만 다시 불러옵니다(자동 폴링 없음).
 - **게임 진행**: 시작할 때 시나리오 구성을 기기에 복사해 진행합니다. 진행 상황은 이 기기에만 저장되며 새로고침해도 이어집니다.
 - **진행 결과**: 단계별 계획 시간과 실제 진행 시간(일시정지 제외, 초과 포함)을 비교합니다.
 
 ## 실행
 
-Node.js 20.19 이상이 필요합니다.
+배포는 Vercel + Upstash Redis를 기준으로 합니다(아래 ‘Vercel 배포’). 내 컴퓨터에서 실행할 때는 Node.js 20.19 이상이 필요합니다.
 
 ```bash
 npm install
 npm run build      # 프론트엔드 빌드(dist/)
 npm start          # http://localhost:8787 — 앱 화면과 API를 함께 제공
 ```
+
+로컬 실행은 기본적으로 `data/scenarios.json` 파일에 저장합니다. Upstash 환경 변수(`KV_REST_API_URL`·`KV_REST_API_TOKEN`)를
+셸에 넣고 실행하면 로컬 서버도 Redis에 저장합니다(배포된 앱과 같은 데이터를 보게 되므로 주의).
 
 개발 중에는 `npm run dev`로 API 서버(8787)와 Vite 개발 서버(5173)를 함께 띄웁니다. Vite가 `/api` 요청을 API 서버로 넘깁니다.
 
@@ -26,18 +29,66 @@ npm start          # http://localhost:8787 — 앱 화면과 API를 함께 제�
 
 | 이름                   | 기본값            | 설명                                                                       |
 | ---------------------- | ----------------- | -------------------------------------------------------------------------- |
-| `PORT`                 | `8787`            | 서버 포트                                                                  |
-| `HOST`                 | `0.0.0.0`         | 바인딩 주소                                                                |
-| `DATA_DIR`             | `./data`          | 시나리오 저장 폴더(`scenarios.json`). **재시작·재배포 후에도 남는 디스크**여야 합니다. |
-| `STATIC_DIR`           | `./dist`          | 빌드된 앱 화면 폴더                                                        |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | (없음) | Upstash Redis REST 주소·토큰. Vercel Storage로 연결하면 자동으로 들어옵니다. |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | (없음) | 위와 같은 값의 다른 이름(Upstash 콘솔에서 직접 넣는 경우). `KV_*`가 있으면 그쪽을 씁니다. |
 | `TRASH_RETENTION_DAYS` | `30`              | 휴지통 보관 기간. 지나면 영구 삭제                                         |
 | `CORS_ORIGIN`          | (없음)            | 앱 화면을 다른 주소에 올릴 때 허용할 출처. 예: `https://example.github.io` |
+| `PORT`                 | `8787`            | 로컬 서버 포트                                                             |
+| `HOST`                 | `0.0.0.0`         | 로컬 서버 바인딩 주소                                                      |
+| `DATA_DIR`             | `./data`          | 로컬 파일 저장 폴더(`scenarios.json`). Redis 환경 변수가 없을 때만 씁니다. |
+| `STATIC_DIR`           | `./dist`          | 로컬 서버가 제공할 빌드된 앱 화면 폴더                                     |
+
+환경 변수 이름 앞에 앱 이름을 붙이지 않습니다(예: `MYAPP_KV_REST_API_URL`은 읽지 않음). 여러 앱이 같은 Redis를 쓸 때의 구분은
+아래의 **Redis 키 접두사**로 합니다.
 
 앱 화면과 서버를 다른 주소에 올릴 때는 빌드할 때 `VITE_API_BASE=https://서버주소 npm run build`로 API 주소를 지정합니다.
 화면은 상대 경로로 빌드되고 해시 라우팅(`#/...`)을 쓰므로 GitHub Pages 같은 정적 호스팅의 하위 경로에도 올릴 수 있습니다.
 
 > 이 서버에는 로그인이 없습니다. 주소를 아는 사람은 누구나 시나리오를 만들고 고치고 지울 수 있습니다(휴지통에서 30일간 복원 가능).
 > 공개 인터넷에 올린다면 접근 제한(예: 리버스 프록시의 기본 인증)을 함께 두는 것을 권장합니다.
+
+## Vercel 배포
+
+이미 다른 앱들이 쓰는 Upstash Redis 데이터베이스를 **새로 만들지 않고 함께** 씁니다. 이 앱의 데이터는 전용 키 접두사로 분리됩니다.
+
+1. Vercel에서 **Add New → Project**로 이 GitHub 저장소를 가져옵니다. 설정은 `vercel.json`에 있으므로 바꿀 것이 없습니다
+   (Framework: Vite, Build: `npm run build`, Output: `dist`, API: `api/index.js`).
+2. 프로젝트의 **Storage** 탭에서 기존 Upstash Redis 데이터베이스를 **Connect**합니다(새 데이터베이스 만들기 아님).
+   이때 **Custom Environment Variable Prefix는 비워 둡니다**(바꾸면 변수 이름이 달라져 앱이 찾지 못합니다).
+3. **Settings → Environment Variables**에 `KV_REST_API_URL`, `KV_REST_API_TOKEN`이 Production(필요하면 Preview도)에 들어왔는지 확인합니다.
+4. **Deployments**에서 최신 배포를 **Redeploy**합니다(환경 변수는 배포할 때 들어갑니다).
+5. `https://<배포 주소>/api/health`를 열어 `{"ok":true,"storage":"redis"}`가 나오는지 확인합니다.
+   환경 변수가 없으면 `503`과 함께 확인할 변수 이름을 알려 줍니다(그때도 파일에 몰래 저장하지 않습니다).
+
+> 로그인이 없으므로 배포 주소를 아는 사람은 누구나 시나리오를 만들고 고치고 지울 수 있습니다(휴지통에서 30일간 복원 가능).
+
+### Redis 키 접두사와 저장 구조
+
+이 앱은 Redis에 아래 **두 키만** 씁니다. 접두사 `murder-mystery-timer`는 `server/redis-store.mjs`의 `KEY_PREFIX`로 고정되어 있습니다.
+
+| 키                               | 형식 | 내용                                                         |
+| -------------------------------- | ---- | ------------------------------------------------------------ |
+| `murder-mystery-timer:scenarios` | 해시 | 필드 = 시나리오 id, 값 = 시나리오 JSON(목록에 보이는 것)      |
+| `murder-mystery-timer:trash`     | 해시 | 필드 = 시나리오 id, 값 = 시나리오 JSON(휴지통, `deletedAt` 있음) |
+
+- 시나리오 JSON은 예전 `scenarios.json`의 항목과 같습니다: `{ id, name, stages: [{ id, name, durationSec }], createdAt, updatedAt, rev, deletedAt }`.
+- 해시가 비면 Redis가 그 키를 지웁니다. 데이터가 없을 때는 이 앱의 키가 하나도 없을 수 있습니다.
+- 모든 쓰기는 Lua 스크립트 하나(`WRITE_SCRIPT`)로 합니다. 읽어 둔 값이 그대로일 때만 쓰는 compare-and-set이라
+  여러 사람이 동시에 저장해도 서로의 변경을 덮어쓰지 않습니다. 같은 버전을 보고 동시에 편집하면 먼저 저장한 쪽만 저장되고,
+  나머지는 지금처럼 ‘다른 기기에서 먼저 수정했어요’(409) 확인창을 받습니다. 목록+휴지통 500개 한도도 스크립트 안에서 함께 확인합니다.
+- 다른 앱의 데이터를 지킵니다: `KEYS`·`SCAN`·`FLUSHDB`·`FLUSHALL`·`DEL`을 쓰지 않고, 위 두 키 밖의 키는 읽지도 쓰지도 않습니다.
+  요청에 들어온 id는 해시 안의 필드 이름으로만 쓰이므로 다른 키를 가리킬 수 없습니다. 보관 기간이 지난 휴지통 정리도 `murder-mystery-timer:trash` 안에서만 합니다.
+- 요청당 Redis 명령: 목록·휴지통 보기 2개(보관 기간이 지난 항목이 있으면 항목당 1개 더), 만들기 1개, 고치기·이동·삭제 3개(읽기 2 + 쓰기 1).
+  같은 데이터베이스를 쓰는 다른 앱들과 무료 요금제의 명령 수·용량 한도를 함께 쓰므로 명령 수를 적게 유지했습니다.
+
+### 각 기기에만 남는 데이터(localStorage, 바뀌지 않음)
+
+| 키                 | 내용                                         |
+| ------------------ | -------------------------------------------- |
+| `mt:scenarios:v1`  | 마지막으로 받은 목록 사본(오프라인일 때 표시) |
+| `mt:settings:v1`   | 알림음·진동·화면 꺼짐 방지 설정              |
+| `mt:game:v1`       | 진행 중인 게임                               |
+| `mt:result:v1`     | 마지막 게임 결과                             |
 
 ## 앱 이름 바꾸기
 
@@ -121,7 +172,12 @@ npm start          # http://localhost:8787 — 앱 화면과 API를 함께 제�
 ## 구조
 
 ```
-server/            의존성 없는 Node 서버(정적 파일 + JSON API, 파일 저장)
+api/index.js       Vercel 서버리스 함수(모든 /api/* 요청, Redis 저장소만 사용)
+vercel.json        Vercel 빌드·라우팅 설정
+server/app.mjs     API 처리기(로컬 서버와 Vercel 함수가 함께 씀)
+server/redis*.mjs  Upstash Redis REST 클라이언트와 Redis 저장소(키 접두사, compare-and-set 스크립트)
+server/store.mjs   로컬 파일 저장소(로컬 실행·테스트용)
+server/index.mjs   로컬 Node 서버(정적 파일 + API, 의존성 없음)
 shared/limits.json 서버·화면이 함께 쓰는 입력 제한(이름 길이, 단계 수, 최대 시간)
 src/config.ts      앱 이름(한 곳에서 변경)
 src/styles/        디자인 토큰(tokens.css)과 기본 스타일(글꼴은 src/main.tsx에서 불러옴)
@@ -137,6 +193,7 @@ src/data/          API 클라이언트, 목록 캐시 저장소, 편집 초안 �
 
 | 메서드·경로                            | 설명                                           |
 | -------------------------------------- | ---------------------------------------------- |
+| `GET /api/health`                      | 상태 확인 `{ ok, storage: 'redis' \| 'file' }`. 저장소에 닿지 못하면 503 |
 | `GET /api/scenarios`                   | 목록(휴지통 제외), 최근 수정순                  |
 | `POST /api/scenarios`                  | 만들기 `{ name, stages: [{ id?, name, durationSec }] }` |
 | `PUT /api/scenarios/:id`               | 고치기 `{ name, stages, rev }` — `rev`가 다르면 409 `conflict` |
@@ -150,12 +207,17 @@ src/data/          API 클라이언트, 목록 캐시 저장소, 편집 초안 �
 ## 테스트
 
 ```bash
-npm test                 # 단위 테스트(vitest) + 서버 API 테스트(node:test)
+npm test                 # 단위 테스트(vitest) + 서버 API 테스트(node:test, 파일·Redis 저장소 모두)
 npm run test:e2e         # 빌드 후 Playwright E2E(Chromium: 가로 휴대폰·가로 태블릿·세로 휴대폰)
 npm run qa:screens       # 화면 점검: 여러 화면 크기·상태 스크린샷 + 가로 넘침/터치 영역/겹침 자동 검사
 ```
 
-`qa:screens`는 **실행 중인 서버의 데이터를 지우고** 점검용 시나리오로 채웁니다. 점검 전용 데이터 폴더로 띄운 서버에서만 실행하세요.
+서버 API 테스트는 같은 시나리오를 세 저장소로 실행합니다: 파일, Redis(메모리 대역), Redis(실제 `redis-server` — 설치되어 있을 때만,
+실제 Lua 스크립트 실행). Redis 테스트는 `server/testing/upstash-test-server.mjs`가 띄우는 Upstash REST 호환 서버를 쓰며 실제 Upstash에는 연결하지 않습니다.
+키 격리(다른 앱의 키를 건드리지 않음), 동시 저장, 개수 한도, Vercel 요청 본문 형식, 환경 변수 누락도 검사합니다.
+
+E2E 테스트 서버는 데이터를 지우므로 셸에 Redis 환경 변수가 있어도 무시하고 임시 파일 저장소로 뜹니다.
+`qa:screens`도 **실행 중인 서버의 데이터를 지우고** 점검용 시나리오로 채우므로, 파일 저장소로 띄운 점검 전용 서버에서만 실행하세요(Redis 저장소 서버에서는 실행을 거부합니다).
 
 ```bash
 DATA_DIR=/tmp/mt-qa npm start &
@@ -183,7 +245,10 @@ Playwright(Chromium) 기기 흉내로 아래 크기에서 화면을 캡처해 �
 
 ### 직접 확인하지 못한 항목
 
-이 환경에서는 실제 기기와 브라우저를 쓸 수 없어 아래는 **확인하지 못했습니다.**
+이 환경에서는 실제 기기와 브라우저, Vercel·Upstash 계정을 쓸 수 없어 아래는 **확인하지 못했습니다.**
+
+- 실제 Vercel 배포와 실제 Upstash Redis 연결(Upstash REST 형식을 따르는 테스트 서버 + 실제 redis-server 7.0으로만 확인)
+  - Vercel 함수가 요청 본문을 미리 읽어 `req.body`로 넘기는 경우와 직접 읽는 경우를 모두 처리하도록 만들고 테스트했지만, 실제 Vercel에서는 확인하지 못했습니다.
 
 - 실제 iPhone Safari / Android Chrome / iPad에서의 표시와 동작(점검은 Linux Chromium의 기기 흉내로만 했습니다)
   - 본명조·Pretendard 웹 글꼴이 실제 기기에서 내려받아져 표시되는 모습, 글꼴을 받기 전 잠깐 시스템 글꼴로 보였다가 바뀌는 정도

@@ -1,6 +1,7 @@
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { pipeline } from 'node:stream';
+import { RedisError } from './redis.mjs';
 import { StoreError } from './store.mjs';
 import { ValidationError, validateName, validateRev, validateScenarioInput } from './validate.mjs';
 
@@ -21,7 +22,15 @@ const CONTENT_TYPES = {
   '.map': 'application/json; charset=utf-8',
 };
 
-const STORE_ERROR_STATUS = { not_found: 404, conflict: 409, trashed: 409, not_in_trash: 409, limit: 409 };
+const STORE_ERROR_STATUS = {
+  not_found: 404,
+  conflict: 409,
+  trashed: 409,
+  not_in_trash: 409,
+  limit: 409,
+  busy: 503,
+  unavailable: 503,
+};
 
 class HttpError extends Error {
   /** @param {number} status @param {string} code @param {string} message */
@@ -45,44 +54,81 @@ function sendError(res, status, code, message, extra = {}) {
   sendJson(res, status, { error: { code, message, ...extra.error }, ...extra.payload });
 }
 
-async function readJsonBody(req) {
-  const chunks = [];
-  let size = 0;
-  for await (const chunk of req) {
-    size += chunk.length;
-    if (size > MAX_BODY_BYTES) throw new HttpError(413, 'too_large', '요청 내용이 너무 커요.');
-    chunks.push(chunk);
-  }
-  if (size === 0) return {};
-  let body;
+const badJson = () => new HttpError(400, 'bad_json', '요청 형식이 올바르지 않아요.');
+const tooLarge = () => new HttpError(413, 'too_large', '요청 내용이 너무 커요.');
+
+/** 본문 문자열을 JSON 객체로 바꾼다. 빈 본문은 빈 객체다. @param {string} text */
+function parseJsonText(text) {
+  if (Buffer.byteLength(text) > MAX_BODY_BYTES) throw tooLarge();
+  if (!text.trim()) return {};
   try {
-    body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    return JSON.parse(text);
   } catch {
-    throw new HttpError(400, 'bad_json', '요청 형식이 올바르지 않아요.');
+    throw badJson();
   }
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    throw new HttpError(400, 'bad_json', '요청 형식이 올바르지 않아요.');
+}
+
+/**
+ * Vercel의 Node.js 함수는 요청 본문을 미리 읽어 req.body에 넣어 준다(JSON이면 이미 해석된 값, 잘못된 JSON이면
+ * 읽는 순간 오류). 로컬 서버의 요청에는 req.body가 없으므로 그때는 본문 스트림을 직접 읽는다.
+ */
+async function readJsonBody(req) {
+  let provided;
+  try {
+    provided = req.body;
+  } catch {
+    throw badJson();
   }
+
+  let body;
+  if (provided !== undefined) {
+    if (Buffer.isBuffer(provided)) body = parseJsonText(provided.toString('utf8'));
+    else if (typeof provided === 'string') body = parseJsonText(provided);
+    else {
+      if (Buffer.byteLength(JSON.stringify(provided) ?? '') > MAX_BODY_BYTES) throw tooLarge();
+      body = provided;
+    }
+  } else {
+    const chunks = [];
+    let size = 0;
+    for await (const chunk of req) {
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) throw tooLarge();
+      chunks.push(chunk);
+    }
+    body = parseJsonText(Buffer.concat(chunks).toString('utf8'));
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw badJson();
   return body;
 }
 
 /**
+ * API(/api/*)와 빌드된 화면 파일을 처리하는 요청 처리기. 로컬 서버(index.mjs)와 Vercel 함수(api/index.js)가 함께 쓴다.
+ * 저장소는 파일(store.mjs, 로컬)이든 Redis(redis-store.mjs, 배포)든 같은 메서드를 가진다. 조회 메서드도 await로 부른다.
  * @param {{
- *   store: Awaited<ReturnType<typeof import('./store.mjs').openStore>>,
- *   staticDir: string,
+ *   store: Awaited<ReturnType<typeof import('./store.mjs').openStore>> | ReturnType<typeof import('./redis-store.mjs').openRedisStore>,
+ *   staticDir?: string | null,
  *   retentionDays: number,
  *   corsOrigin?: string,
- * }} options
+ * }} options staticDir가 없으면(Vercel) 화면 파일은 제공하지 않는다.
  */
-export function createApp({ store, staticDir, retentionDays, corsOrigin = '' }) {
+export function createApp({ store, staticDir = null, retentionDays, corsOrigin = '' }) {
   const routes = [
-    ['GET', /^\/api\/health$/, () => ({ status: 200, body: { ok: true } })],
+    [
+      'GET',
+      /^\/api\/health$/,
+      async () => {
+        await store.ping();
+        return { status: 200, body: { ok: true, storage: store.kind } };
+      },
+    ],
     [
       'GET',
       /^\/api\/scenarios$/,
       async () => {
         await store.purgeExpired();
-        return { status: 200, body: { items: store.listActive(), retentionDays } };
+        return { status: 200, body: { items: await store.listActive(), retentionDays } };
       },
     ],
     [
@@ -96,8 +142,8 @@ export function createApp({ store, staticDir, retentionDays, corsOrigin = '' }) 
     [
       'GET',
       /^\/api\/scenarios\/([^/]+)$/,
-      (_req, id) => {
-        const item = store.get(id);
+      async (_req, id) => {
+        const item = await store.get(id);
         if (!item) throw new StoreError('not_found', '시나리오를 찾을 수 없어요.');
         return { status: 200, body: { item } };
       },
@@ -135,7 +181,7 @@ export function createApp({ store, staticDir, retentionDays, corsOrigin = '' }) 
       /^\/api\/trash$/,
       async () => {
         await store.purgeExpired();
-        return { status: 200, body: { items: store.listTrash(), retentionDays } };
+        return { status: 200, body: { items: await store.listTrash(), retentionDays } };
       },
     ],
     [
@@ -185,12 +231,21 @@ export function createApp({ store, staticDir, retentionDays, corsOrigin = '' }) 
         });
       }
       if (error instanceof HttpError) return sendError(res, error.status, error.code, error.message);
+      if (error instanceof RedisError) {
+        // 연결 실패·토큰 오류 등. 자세한 내용은 서버 기록(Vercel 로그)에만 남긴다.
+        console.error('[api] Redis 오류', error);
+        return sendError(res, 503, 'storage_unavailable', '서버 저장소에 연결하지 못했어요. 잠시 후 다시 시도해주세요.');
+      }
       console.error('[api] 처리 중 오류', error);
       return sendError(res, 500, 'server_error', '서버에서 문제가 생겼어요. 잠시 후 다시 시도해주세요.');
     }
   }
 
   async function serveStatic(req, res, pathname) {
+    if (!staticDir) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      return res.end('Not found');
+    }
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       res.writeHead(405, { Allow: 'GET, HEAD' });
       return res.end();

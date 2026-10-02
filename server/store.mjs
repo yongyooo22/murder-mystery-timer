@@ -8,7 +8,7 @@ const COPY_SUFFIX = ' (복사본)';
 
 export class StoreError extends Error {
   /**
-   * @param {'not_found' | 'conflict' | 'trashed' | 'not_in_trash' | 'limit'} code
+   * @param {'not_found' | 'conflict' | 'trashed' | 'not_in_trash' | 'limit' | 'busy' | 'unavailable'} code
    * @param {string} message
    * @param {object} [item] 충돌 시 서버에 있는 최신 시나리오
    */
@@ -17,6 +17,25 @@ export class StoreError extends Error {
     this.code = code;
     this.item = item;
   }
+}
+
+/** 파일 저장소와 Redis 저장소가 같은 오류를 같은 문구로 알리도록 한곳에서 만든다. */
+export const storeErrors = {
+  notFound: () => new StoreError('not_found', '시나리오를 찾을 수 없어요. 이미 영구 삭제되었을 수 있어요.'),
+  trashed: (item) => new StoreError('trashed', '이 시나리오는 휴지통으로 이동되었어요.', item),
+  conflict: (item) => new StoreError('conflict', '다른 기기에서 이 시나리오를 먼저 수정했어요.', item),
+  notInTrash: (item) => new StoreError('not_in_trash', '휴지통에 있는 시나리오만 영구 삭제할 수 있어요.', item),
+  limit: () =>
+    new StoreError(
+      'limit',
+      `시나리오는 휴지통을 포함해 최대 ${LIMITS.maxScenarios}개까지 저장할 수 있어요. 휴지통의 시나리오를 영구 삭제한 뒤 다시 시도해주세요.`,
+    ),
+};
+
+/** 복제본 이름: ‘이름 (복사본)’, 이름 길이 제한을 넘지 않게 앞부분을 줄인다. */
+export function makeCopyName(name) {
+  const base = [...name].slice(0, LIMITS.scenarioNameMax - [...COPY_SUFFIX].length).join('');
+  return `${base}${COPY_SUFFIX}`;
 }
 
 /**
@@ -38,8 +57,9 @@ const byUpdatedDesc = (a, b) => b.updatedAt.localeCompare(a.updatedAt);
 const byDeletedDesc = (a, b) => (b.deletedAt ?? '').localeCompare(a.deletedAt ?? '');
 
 /**
- * JSON 파일 하나에 모든 시나리오를 저장하는 단순한 저장소.
+ * JSON 파일 하나에 모든 시나리오를 저장하는 단순한 저장소(로컬 실행·테스트용).
  * 변경 작업은 한 번에 하나씩 실행되고, 파일 저장에 실패하면 메모리 상태도 되돌린다.
+ * 서버 프로세스 하나가 파일을 독점한다고 가정하므로, 여러 인스턴스가 뜨는 Vercel에서는 쓰지 않는다(redis-store.mjs).
  *
  * @param {{ file: string, retentionDays: number, now?: () => number }} options
  */
@@ -86,33 +106,29 @@ export async function openStore({ file, retentionDays, now = () => Date.now() })
   /** @param {Scenario[]} draft @param {string} id */
   function findOrThrow(draft, id) {
     const item = draft.find((it) => it.id === id);
-    if (!item) throw new StoreError('not_found', '시나리오를 찾을 수 없어요. 이미 영구 삭제되었을 수 있어요.');
+    if (!item) throw storeErrors.notFound();
     return item;
   }
 
   /** @param {Scenario[]} draft @param {string} id */
   function findActiveOrThrow(draft, id) {
     const item = findOrThrow(draft, id);
-    if (item.deletedAt) throw new StoreError('trashed', '이 시나리오는 휴지통으로 이동되었어요.', structuredClone(item));
+    if (item.deletedAt) throw storeErrors.trashed(structuredClone(item));
     return item;
   }
 
   /** @param {Scenario[]} draft */
   function assertCapacity(draft) {
-    if (draft.length >= LIMITS.maxScenarios) {
-      throw new StoreError(
-        'limit',
-        `시나리오는 휴지통을 포함해 최대 ${LIMITS.maxScenarios}개까지 저장할 수 있어요. 휴지통의 시나리오를 영구 삭제한 뒤 다시 시도해주세요.`,
-      );
-    }
-  }
-
-  function makeCopyName(name) {
-    const base = [...name].slice(0, LIMITS.scenarioNameMax - [...COPY_SUFFIX].length).join('');
-    return `${base}${COPY_SUFFIX}`;
+    if (draft.length >= LIMITS.maxScenarios) throw storeErrors.limit();
   }
 
   return {
+    /** 저장소 종류(상태 확인용) */
+    kind: 'file',
+
+    /** 저장소가 응답하는지 확인한다. 파일 저장소는 늘 메모리에 있으므로 확인할 것이 없다. */
+    async ping() {},
+
     /** 휴지통 보관 기간이 지난 항목을 지운다. */
     async purgeExpired() {
       if (!items.some(isExpired)) return 0;
@@ -158,9 +174,7 @@ export async function openStore({ file, retentionDays, now = () => Date.now() })
     update(id, input, baseRev) {
       return transact((draft) => {
         const item = findActiveOrThrow(draft, id);
-        if (item.rev !== baseRev) {
-          throw new StoreError('conflict', '다른 기기에서 이 시나리오를 먼저 수정했어요.', structuredClone(item));
-        }
+        if (item.rev !== baseRev) throw storeErrors.conflict(structuredClone(item));
         Object.assign(item, input, { updatedAt: isoNow(), rev: item.rev + 1 });
         return structuredClone(item);
       });
@@ -218,10 +232,8 @@ export async function openStore({ file, retentionDays, now = () => Date.now() })
     purge(id) {
       return transact((draft) => {
         const index = draft.findIndex((it) => it.id === id);
-        if (index === -1) throw new StoreError('not_found', '시나리오를 찾을 수 없어요. 이미 영구 삭제되었을 수 있어요.');
-        if (!draft[index].deletedAt) {
-          throw new StoreError('not_in_trash', '휴지통에 있는 시나리오만 영구 삭제할 수 있어요.', structuredClone(draft[index]));
-        }
+        if (index === -1) throw storeErrors.notFound();
+        if (!draft[index].deletedAt) throw storeErrors.notInTrash(structuredClone(draft[index]));
         draft.splice(index, 1);
       });
     },

@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import LIMITS from '../shared/limits.json' with { type: 'json' };
+import { readFileSync } from 'node:fs';
 
-export { LIMITS };
+/**
+ * 서버·화면이 함께 쓰는 입력 제한. JSON import 문법(with { type: 'json' }) 대신 파일을 직접 읽어
+ * Vercel 함수 번들링 도구가 어떤 버전이든 같은 방식으로 동작하게 한다(vercel.json에서 이 파일을 함께 싣는다).
+ */
+export const LIMITS = JSON.parse(readFileSync(new URL('../shared/limits.json', import.meta.url), 'utf8'));
 
 /** 한 단계에 넣을 수 있는 최대 시간(초). 999분 59초 */
 export const STAGE_MAX_SEC = LIMITS.stageMaxMinutes * 60 + 59;

@@ -7,3 +7,4 @@ playwright-report/
 e2e/screenshots/
 .env.local
 .DS_Store
+.vercel/
