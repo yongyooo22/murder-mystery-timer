@@ -4,15 +4,20 @@
 
 .settings__heading {
   margin-top: var(--sp-5);
-  padding-bottom: var(--sp-1);
-  font-size: var(--fs-14);
-  font-weight: var(--fw-semibold);
+  padding-bottom: var(--sp-2);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-label);
   color: var(--c-text-3);
   border-bottom: 1px solid var(--c-divider);
 }
 
 .settings__group:first-child .settings__heading:first-child {
   margin-top: 0;
+}
+
+.settings .switch-row + .switch-row {
+  border-top: 1px solid var(--c-divider);
 }
 
 /* 가로 화면에서는 두 칸(알림 | 화면·저장 위치)으로 나눠 낮은 화면에서도 스크롤을 줄인다. */
@@ -35,12 +40,15 @@
 
 .settings__note {
   margin-top: var(--sp-3);
-  font-size: var(--fs-15);
+  font-size: var(--fs-14);
   color: var(--c-text-2);
 }
 
 .settings__version {
-  margin-top: var(--sp-3);
-  font-size: var(--fs-13);
+  margin-top: var(--sp-4);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
   color: var(--c-text-3);
 }

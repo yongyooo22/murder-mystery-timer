@@ -1,28 +1,42 @@
+/*
+ * 진행 결과. 요약은 카드 대신 구분선과 글자 크기로 나누고,
+ * 단계별 계획·실제 시간은 숫자를 오른쪽에 맞춘 표로 보여 준다.
+ */
 .result-screen .screen__body {
   padding-top: var(--sp-8);
   padding-bottom: calc(var(--sp-8) + var(--safe-bottom));
 }
 
 .result-head__eyebrow {
-  font-size: var(--fs-15);
-  font-weight: var(--fw-semibold);
-  color: var(--c-accent);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-label);
+  color: var(--c-text-2);
+}
+
+.result-head__eyebrow::before {
+  content: '';
+  width: 3px;
+  height: 1.1em;
+  border-radius: 1px;
+  background: var(--c-accent-line);
 }
 
 .result-head__title {
-  margin-top: var(--sp-1);
-  font-size: var(--fs-24);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-tight);
+  margin-top: var(--sp-2);
+  font-size: var(--fs-28);
+  color: var(--c-text);
 }
 
 .result-head__meta {
   margin-top: var(--sp-2);
-  font-size: var(--fs-14);
+  font-size: var(--fs-13);
   color: var(--c-text-3);
 }
 
-/* 요약: 카드 대신 구분선과 글자 크기로 나눈다. */
 .result-summary {
   display: grid;
   grid-template-columns: 1fr;
@@ -40,7 +54,7 @@
 }
 
 .result-summary dt {
-  font-size: var(--fs-15);
+  font-size: var(--fs-14);
   color: var(--c-text-2);
 }
 
@@ -55,14 +69,15 @@
 }
 
 .result-summary__sentence {
-  font-size: var(--fs-14);
+  font-family: var(--font-sans);
+  font-size: var(--fs-13);
   font-weight: var(--fw-regular);
   color: var(--c-text-2);
 }
 
 .result-note {
   margin-top: var(--sp-2);
-  font-size: var(--fs-14);
+  font-size: var(--fs-13);
   color: var(--c-text-3);
 }
 
@@ -99,7 +114,7 @@
 }
 
 .result-stages__unplayed {
-  font-size: var(--fs-14);
+  font-size: var(--fs-13);
   color: var(--c-text-3);
 }
 
@@ -123,14 +138,18 @@
 .result-row__name {
   grid-column: 1 / -1;
   display: flex;
-  gap: var(--sp-2);
-  font-size: var(--fs-16);
+  gap: var(--sp-3);
+  font-size: var(--fs-15);
   font-weight: var(--fw-medium);
+  color: var(--c-text);
 }
 
 .result-row__index {
   flex: 0 0 auto;
-  min-width: 2ch;
+  min-width: 2.4ch;
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  line-height: calc(var(--fs-15) * 1.55);
   color: var(--c-text-3);
 }
 
@@ -142,6 +161,7 @@
 }
 
 .result-row__label {
+  font-size: var(--fs-13);
   color: var(--c-text-3);
 }
 
@@ -158,16 +178,22 @@
   .result-table__head,
   .result-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 88px 88px 88px;
+    grid-template-columns: minmax(0, 1fr) 84px 84px 84px;
     column-gap: var(--sp-4);
     align-items: baseline;
   }
 
   .result-table__head {
     padding: var(--sp-2) 0;
-    font-size: var(--fs-14);
+    font-size: var(--fs-12);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--ls-label);
     color: var(--c-text-3);
     border-bottom: 1px solid var(--c-divider);
+  }
+
+  .result-table__head > :first-child {
+    padding-left: calc(2.4ch + var(--sp-3));
   }
 
   .result-table__head > :not(:first-child),
@@ -203,7 +229,7 @@
   }
 }
 
-/* ---------- 가로 화면: 왼쪽 요약과 버튼, 오른쪽 단계별 시간 ---------- */
+/* ---------- 가로 화면: 왼쪽 요약과 버튼 | 오른쪽 단계별 시간(사이에 얇은 세로선) ---------- */
 
 @media (orientation: landscape) and (min-width: 560px) {
   .result-screen {
@@ -211,24 +237,34 @@
   }
 
   .result-screen .screen__body {
-    padding-top: var(--sp-6);
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   .result-layout {
     display: grid;
-    grid-template-columns: minmax(260px, 380px) minmax(0, 1fr);
+    grid-template-columns: minmax(260px, 34%) minmax(0, 1fr);
     grid-template-rows: auto auto auto 1fr;
     grid-template-areas:
       'head stages'
       'summary stages'
       'note stages'
       'actions stages';
-    column-gap: clamp(24px, 4vw, 56px);
     align-items: start;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .result-head,
+  .result-summary,
+  .result-note,
+  .result-actions {
+    margin-right: clamp(24px, 3.5vw, 48px);
   }
 
   .result-head {
     grid-area: head;
+    padding-top: calc(var(--safe-top) + var(--sp-6));
   }
 
   .result-summary {
@@ -241,7 +277,10 @@
 
   .result-stages {
     grid-area: stages;
+    align-self: stretch;
     margin-top: 0;
+    padding: calc(var(--safe-top) + var(--sp-5)) 0 calc(var(--safe-bottom) + var(--sp-6)) clamp(24px, 3.5vw, 48px);
+    border-left: 1px solid var(--c-divider);
   }
 
   .result-actions {
@@ -249,6 +288,7 @@
     flex-direction: column;
     justify-content: flex-start;
     margin-top: var(--sp-6);
+    padding-bottom: calc(var(--safe-bottom) + var(--sp-6));
   }
 
   /* 왼쪽 칸에서는 요약을 세로 줄로(항목 이름 왼쪽, 값 오른쪽) */
@@ -275,5 +315,9 @@
     align-items: flex-end;
     text-align: right;
     font-size: var(--fs-20);
+  }
+
+  .result-head__title {
+    font-size: var(--fs-24);
   }
 }

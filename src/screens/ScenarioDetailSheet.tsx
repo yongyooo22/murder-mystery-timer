@@ -31,7 +31,7 @@ export function ScenarioDetailSheet({ id }: { id: string | null }) {
         }
       >
         {loading ? (
-          <div className="detail-loading">
+          <div className="detail-loading" role="status">
             <Spinner size={22} />
             <span>불러오는 중…</span>
           </div>
@@ -49,7 +49,7 @@ export function ScenarioDetailSheet({ id }: { id: string | null }) {
         open
         variant="sheet"
         onClose={close}
-        title={scenario.name}
+        title={<span className="serif detail-title">{scenario.name}</span>}
         subtitle={
           <>
             {scenario.stages.length}단계 · 총 {durationText(total)}
@@ -78,7 +78,7 @@ export function ScenarioDetailSheet({ id }: { id: string | null }) {
         >
           {scenario.stages.map((stage, index) => (
             <li key={stage.id} className="stage-preview__row">
-              <span className="stage-preview__index num">{index + 1}</span>
+              <span className="stage-preview__index num">{String(index + 1).padStart(2, '0')}</span>
               <span className="stage-preview__name">{stage.name}</span>
               <span className="stage-preview__time num">{clockText(stage.durationSec)}</span>
             </li>

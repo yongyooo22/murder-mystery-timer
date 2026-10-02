@@ -39,6 +39,13 @@ figure {
   margin: 0;
 }
 
+h1,
+h2,
+h3,
+h4 {
+  font-weight: var(--fw-semibold);
+}
+
 ol,
 ul {
   padding: 0;
@@ -80,8 +87,8 @@ svg {
 }
 
 ::selection {
-  background: var(--c-accent-soft);
-  color: var(--c-text);
+  background: var(--c-accent);
+  color: var(--c-on-accent);
 }
 
 [hidden] {
@@ -104,6 +111,33 @@ svg {
 .num {
   font-family: var(--font-digits);
   font-variant-numeric: tabular-nums;
+}
+
+/* 시나리오 제목·단계 이름에 쓰는 명조 */
+.serif {
+  font-family: var(--font-serif);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-serif);
+  letter-spacing: -0.01em;
+}
+
+/* 앱 이름처럼 작고 자간이 넓은 영문 대문자 소제목 */
+.kicker {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-text-2);
+}
+
+/* ‘시나리오’, ‘다음 단계’처럼 값 위에 붙는 작은 라벨 */
+.label {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-label);
+  color: var(--c-text-3);
 }
 
 /* 화면 공통 틀: 노치·홈 표시줄 여백을 포함한다. */
@@ -136,7 +170,7 @@ svg {
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
-  margin-bottom: var(--sp-3);
+  margin-bottom: var(--sp-2);
   min-height: var(--tap-min);
 }
 
@@ -158,6 +192,17 @@ svg {
 
 .text-3 {
   color: var(--c-text-3);
+}
+
+/* 불러오는 중: 화면마다 같은 모양 */
+.loading-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-12) 0;
+  font-size: var(--fs-15);
+  color: var(--c-text-2);
 }
 
 @media (prefers-reduced-motion: reduce) {

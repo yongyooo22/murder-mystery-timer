@@ -85,7 +85,7 @@ export function StageRow({
         <Icon name="grip" size={22} />
       </button>
       <span className="stage-row__index num" aria-hidden="true">
-        {n}
+        {String(n).padStart(2, '0')}
       </span>
       <AutoTextarea
         className="input stage-row__name"

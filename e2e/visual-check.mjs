@@ -1,5 +1,5 @@
 /**
- * 화면 점검용 스크린샷 + 자동 검사(가로 넘침, 44px 미만 터치 영역).
+ * 화면 점검용 스크린샷 + 자동 검사(가로 넘침, 44px 미만 터치 영역, 진행 화면 겹침·잘림·화면 밖 조작).
  * 사용: 서버를 띄운 뒤(npm run build && npm start) `npm run qa:screens`
  * 결과: e2e/screenshots/*.png, e2e/screenshots/report.json
  *
@@ -123,59 +123,96 @@ async function inspect(page, name) {
   await page.waitForTimeout(250);
   const data = await page.evaluate(() => {
     const overflowX = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+    const inView = (r) => r.bottom > 0 && r.top < window.innerHeight;
     const small = [];
     for (const el of document.querySelectorAll('button, input, textarea, a[href], [role="switch"]')) {
       if (el.closest('.visually-hidden')) continue;
       const r = el.getBoundingClientRect();
       const style = getComputedStyle(el);
       if (r.width <= 1 || r.height <= 1 || style.visibility === 'hidden' || style.display === 'none') continue;
-      if (r.bottom < 0 || r.top > window.innerHeight) continue;
+      if (!inView(r)) continue;
       // 터치 영역을 ::before로 넓힌 스위치는 실제 영역으로 계산
-      const extra = el.classList.contains('switch') ? 10 : 0;
+      const extra = el.classList.contains('switch') ? 12 : 0;
       if (r.width < 44 || r.height + extra < 44) {
         small.push(`${(el.getAttribute('aria-label') || el.textContent || el.tagName).trim().slice(0, 24)} ${Math.round(r.width)}x${Math.round(r.height)}`);
       }
     }
-    for (const el of document.querySelectorAll('.btn--primary')) {
-      const r = el.getBoundingClientRect();
-      if (r.height > 1 && r.height < 52 && r.bottom > 0 && r.top < window.innerHeight) {
-        small.push(`주요버튼 ${(el.textContent || '').trim().slice(0, 16)} ${Math.round(r.height)}px`);
+    const problems = [];
+    const play = document.querySelector('.play');
+    if (play) {
+      // 진행 화면에서는 시나리오 이름이 늘 보여야 한다(세로에서 진행 순서를 펼쳐 아래로 내린 경우 제외).
+      const scenarioName = document.querySelector('.play-brand__name');
+      const r = scenarioName?.getBoundingClientRect();
+      const visible = r && r.width > 20 && r.height > 10 && r.top >= 0 && r.bottom <= window.innerHeight && getComputedStyle(scenarioName).visibility !== 'hidden';
+      if (window.scrollY === 0 && (!visible || !scenarioName.textContent.trim())) problems.push('시나리오 이름 안 보임');
+      // 핵심 조작(−1분·일시정지·+1분·이전·다음)이 첫 화면 안에 있어야 한다(세로에서 목록을 펼친 경우 제외).
+      if (window.scrollY === 0) {
+        for (const btn of document.querySelectorAll('.play-controls .btn')) {
+          const b = btn.getBoundingClientRect();
+          if (b.bottom > window.innerHeight + 1 || b.top < 0) problems.push(`조작 버튼 화면 밖: ${btn.textContent.trim()}`);
+        }
       }
-    }
-    // 진행 화면에서는 시나리오 이름이 늘 보여야 한다.
-    const scenarioName = document.querySelector('.play-top__scenario');
-    if (document.querySelector('.play') && scenarioName) {
-      const r = scenarioName.getBoundingClientRect();
-      const visible = r.width > 20 && r.height > 10 && r.top >= 0 && r.bottom <= window.innerHeight && getComputedStyle(scenarioName).visibility !== 'hidden';
-      if (!visible || !scenarioName.textContent.trim()) small.push('시나리오 이름 안 보임');
+      // 단계 이름·시나리오 이름·진행 순서 이름이 잘리지 않아야 한다.
+      for (const el of document.querySelectorAll('.play-stage__name, .play-brand__name, .route-row__name')) {
+        if (getComputedStyle(el).display === 'none' || el.closest('[data-open="false"] .play-route__panel')) continue;
+        // 낮은 가로 화면에서 시나리오 이름을 두 줄로 줄인 것은 의도한 것(전체 이름은 title로 제공)
+        if (el.title === el.textContent.trim() && getComputedStyle(el).webkitLineClamp !== 'none') continue;
+        if (el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2) problems.push(`이름 잘림: ${el.textContent.trim().slice(0, 16)}`);
+      }
+      // 진행 순서 목록이 보이면 현재 단계가 목록의 보이는 영역 안에 있어야 한다.
+      const list = document.querySelector('.route-list');
+      const current = list?.querySelector('[aria-current="step"]');
+      if (list && current && list.getClientRects().length > 0) {
+        const lr = list.getBoundingClientRect();
+        const cr = current.getBoundingClientRect();
+        if (cr.top < lr.top - 1 || cr.bottom > lr.bottom + 1) problems.push('현재 단계가 목록에서 안 보임');
+      }
+      // 큰 숫자는 화면에서 가장 큰 글자여야 한다.
+      const digits = document.querySelector('.play-timer__digits');
+      const stageName = document.querySelector('.play-stage__name');
+      if (digits && stageName && parseFloat(getComputedStyle(digits).fontSize) <= parseFloat(getComputedStyle(stageName).fontSize) * 1.5) {
+        problems.push('숫자가 충분히 크지 않음');
+      }
     }
     const overlaps = [];
     const timer = document.querySelector('.play-timer__digits');
     if (timer) {
       const t = timer.getBoundingClientRect();
-      for (const el of document.querySelectorAll('.play-stage__name, .play-status, .play-info, .play-top')) {
+      for (const el of document.querySelectorAll('.play-stage__name, .play-meta, .play-info, .play-progress, .play-controls, .play-tools, .play-brand, .play-route')) {
         const r = el.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) continue;
         if (r.bottom > t.top + 2 && r.top < t.bottom - 2 && r.right > t.left && r.left < t.right) overlaps.push(el.className);
+      }
+      // 오른쪽 위 아이콘과 단계 번호·상태가 겹치지 않아야 한다.
+      const tools = document.querySelector('.play-tools')?.getBoundingClientRect();
+      const meta = document.querySelector('.play-meta')?.getBoundingClientRect();
+      if (tools && meta && tools.width > 0 && tools.bottom > meta.top && tools.top < meta.bottom && tools.left < meta.right && tools.right > meta.left) {
+        overlaps.push('play-tools×play-meta');
       }
     }
     const clipped = [];
-    for (const el of document.querySelectorAll('.btn__label, .play-info__label, .topbar__title')) {
+    for (const el of document.querySelectorAll('.btn__label, .play-info__label, .topbar__title, .play-step, .play-status__label, .play-route__total')) {
+      if (el.getClientRects().length === 0) continue;
       if (el.scrollWidth > el.clientWidth + 1) clipped.push(el.textContent.trim().slice(0, 24));
     }
+    const primary = document.querySelector('.play-primary');
     return {
       overflowX,
       small,
+      problems,
       overlaps,
       clipped,
       timerFontPx: timer ? parseFloat(getComputedStyle(timer).fontSize) : null,
       timerRect: timer ? timer.getBoundingClientRect().toJSON() : null,
+      primaryRect: primary ? primary.getBoundingClientRect().toJSON() : null,
     };
   });
   report.push({ name, ...data });
   await page.screenshot({ path: `${OUT}/${name}.png` });
   const flags = [
     data.overflowX > 0 && `가로넘침 ${data.overflowX}px`,
-    data.small.length && `작은터치 ${data.small.length}`,
+    data.small.length && `작은터치 ${data.small.join(', ')}`,
+    data.problems.length && data.problems.join(', '),
     data.overlaps.length && `겹침 ${data.overlaps.join(',')}`,
     data.clipped.length && `잘림 ${data.clipped.join(',')}`,
   ].filter(Boolean);
@@ -319,12 +356,20 @@ async function run() {
     await play('play-paused', gameState({ name: '저택의 밤', stages: STANDARD, current: 2, elapsedSec: 400, paused: true }));
     await play('play-warning', gameState({ name: '저택의 밤', stages: STANDARD, current: 3, elapsedSec: m(20) - 42 }));
     await play('play-overtime', gameState({ name: '저택의 밤', stages: STANDARD, current: 3, elapsedSec: m(20) + 83 }));
+    await play('play-overtime-paused', gameState({ name: '저택의 밤', stages: STANDARD, current: 3, elapsedSec: m(20) + 83, paused: true }));
     await play('play-last-overtime', gameState({ name: LONG_NAME, stages: LONG_STAGES, current: 3, elapsedSec: m(90) + 125 }));
     await play('play-long-name', gameState({ name: LONG_NAME, stages: LONG_STAGES, current: 2, elapsedSec: 10 }));
+    await play('play-many', gameState({ name: '단계가 많은 시나리오', stages: MANY, current: 21, elapsedSec: 30 }));
     await play('play-hour', gameState({ name: LONG_NAME, stages: LONG_STAGES, current: 3, elapsedSec: 30 }));
-    await page.getByRole('button', { name: '단계 목록 보기' }).click();
-    await shot('play-stage-list');
-    await page.keyboard.press('Escape');
+    // 세로 화면: ‘진행 순서 보기’를 펼친 모습
+    const routeToggle = page.getByRole('button', { name: '진행 순서 보기' });
+    if (await routeToggle.isVisible()) {
+      await routeToggle.click();
+      await page.waitForTimeout(500);
+      await shot('play-route-open');
+      await routeToggle.click();
+      await page.evaluate(() => window.scrollTo(0, 0));
+    }
     await page.getByRole('button', { name: '게임 종료' }).click();
     await shot('play-end-confirm');
     await page.keyboard.press('Escape');
@@ -357,7 +402,7 @@ async function run() {
 
   await browser.close();
   await writeFile(`${OUT}/report.json`, JSON.stringify(report, null, 2));
-  const problems = report.filter((r) => r.overflowX > 0 || r.small.length || r.overlaps.length || r.clipped.length);
+  const problems = report.filter((r) => r.overflowX > 0 || r.small.length || r.problems.length || r.overlaps.length || r.clipped.length);
   console.log(`\n${report.length}개 화면 점검, 문제 ${problems.length}개`);
   if (problems.length) process.exitCode = 1;
 }

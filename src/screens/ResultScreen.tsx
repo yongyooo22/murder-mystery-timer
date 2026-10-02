@@ -56,7 +56,7 @@ export function ResultScreen() {
       <main className="screen__body result-layout">
         <header className="result-head">
           <p className="result-head__eyebrow">게임 종료</p>
-          <h1 className="result-head__title">{result.scenarioName}</h1>
+          <h1 className="result-head__title serif">{result.scenarioName}</h1>
           <p className="result-head__meta num">
             {timeOfDayText(result.startedAt)} 시작 · {timeOfDayText(result.endedAt)} 종료
           </p>
@@ -65,11 +65,11 @@ export function ResultScreen() {
         <dl className="result-summary">
           <div className="result-summary__item">
             <dt>전체 계획 시간</dt>
-            <dd>{durationText(result.plannedTotalSec)}</dd>
+            <dd className="num">{durationText(result.plannedTotalSec)}</dd>
           </div>
           <div className="result-summary__item">
             <dt>실제 진행 시간</dt>
-            <dd>{durationText(result.actualTotalSec)}</dd>
+            <dd className="num">{durationText(result.actualTotalSec)}</dd>
           </div>
           <div className="result-summary__item">
             <dt>차이</dt>
@@ -102,7 +102,7 @@ export function ResultScreen() {
                 role="row"
               >
                 <span className="result-row__name" role="cell">
-                  <span className="result-row__index num">{i + 1}</span>
+                  <span className="result-row__index num">{String(i + 1).padStart(2, '0')}</span>
                   {s.name}
                 </span>
                 <span className="result-row__cell" role="cell">

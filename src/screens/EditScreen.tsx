@@ -62,7 +62,7 @@ export function EditScreen({ scenarioId, templateKey }: EditScreenProps) {
       />
       <main className="screen__body">
         {list.status === 'loading' ? (
-          <div className="edit-loading" role="status">
+          <div className="edit-loading loading-line" role="status">
             <Spinner size={22} />
             <span>불러오는 중…</span>
           </div>

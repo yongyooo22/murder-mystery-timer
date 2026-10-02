@@ -1,12 +1,14 @@
+/* 확인이 필요한 안내: 면을 칠하지 않고 얇은 테두리와 아이콘 색으로 성격을 구분한다. */
 .alert {
-  --alert-color: var(--c-info);
-  --alert-bg: var(--c-info-soft);
+  --alert-color: var(--c-text-2);
+  --alert-line: var(--c-border);
+  --alert-bg: transparent;
   display: flex;
   align-items: flex-start;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--alert-line);
   border-radius: var(--r-md);
-  border: 1px solid color-mix(in srgb, var(--alert-color) 35%, transparent);
   background: var(--alert-bg);
   color: var(--c-text);
   font-size: var(--fs-15);
@@ -14,19 +16,18 @@
 
 .alert--warning {
   --alert-color: var(--c-amber);
+  --alert-line: var(--c-amber-line);
   --alert-bg: var(--c-amber-soft);
 }
 .alert--error {
   --alert-color: var(--c-danger);
+  --alert-line: var(--c-danger-line);
   --alert-bg: var(--c-danger-soft);
 }
 .alert--success {
   --alert-color: var(--c-success);
+  --alert-line: rgba(143, 203, 159, 0.45);
   --alert-bg: var(--c-success-soft);
-}
-.alert--offline {
-  --alert-color: var(--c-text-2);
-  --alert-bg: var(--c-surface);
 }
 
 .alert__icon {

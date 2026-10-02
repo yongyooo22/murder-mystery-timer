@@ -32,6 +32,7 @@ import './ListScreen.css';
 
 export function ListScreen({ detailId }: { detailId: string | null }) {
   const list = useScenarioList();
+  const { game } = useGameStore();
   const toast = useToast();
   const templatesRef = useRef<HTMLHeadingElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -83,11 +84,14 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
 
   const hasList = list.source !== 'none';
   const isEmpty = hasList && list.items.length === 0;
+  // 버건디로 채운 주요 버튼은 화면에 하나만: 진행 중인 게임이 있으면 ‘이어가기’, 없으면 ‘새 시나리오’
+  const createVariant = game ? 'secondary' : 'primary';
 
   return (
     <div className="screen list-screen">
       <TopBar
-        title={APP_CONFIG.name}
+        variant="brand"
+        title={<span lang="en">{APP_CONFIG.name}</span>}
         right={<IconButton icon="settings" label="설정" onClick={() => setSettingsOpen(true)} />}
       />
 
@@ -125,7 +129,7 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
               title="저장된 시나리오가 없어요"
               actions={
                 <>
-                  <Button variant="primary" size="lg" icon="plus" onClick={() => navigate({ name: 'new' })}>
+                  <Button variant={createVariant} size="lg" icon="plus" onClick={() => navigate({ name: 'new' })}>
                     새로 만들기
                   </Button>
                   <Button size="lg" icon="template" onClick={showTemplates}>
@@ -140,7 +144,7 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
 
           {!isEmpty && (
             <div className="list-new">
-              <Button variant="primary" size="lg" icon="plus" block onClick={() => navigate({ name: 'new' })}>
+              <Button variant={createVariant} size="lg" icon="plus" block onClick={() => navigate({ name: 'new' })}>
                 새 시나리오
               </Button>
             </div>
@@ -275,7 +279,7 @@ function SyncStatus({ list }: { list: ScenarioListState }) {
 
 function LoadingList() {
   return (
-    <div className="list-loading" role="status">
+    <div className="list-loading loading-line" role="status">
       <Spinner size={22} />
       <span>불러오는 중…</span>
     </div>
@@ -295,7 +299,7 @@ function ScenarioRow({ scenario, onRename, onDuplicate, onTrash }: ScenarioRowPr
     // 행 아무 곳이나 눌러도 ‘열기’와 같다(바로 게임이 시작되지는 않는다).
     <li className="scenario-row" onClick={open}>
       <div className="scenario-row__text">
-        <p className="scenario-row__name">{scenario.name}</p>
+        <p className="scenario-row__name serif">{scenario.name}</p>
         <p className="scenario-row__meta">
           {scenario.stages.length}단계 · 총 {durationText(sumDurationSec(scenario.stages))}
         </p>
@@ -324,18 +328,20 @@ function ResumeGame() {
   const now = Date.now();
   const stage = game.stages[game.current];
   const state = isOvertime(game, now) ? '시간 초과' : isRunning(game) ? '진행 중' : '일시정지';
+  const pad2 = (n: number) => String(n).padStart(2, '0');
   return (
     <section className="resume" aria-labelledby="resume-title">
       <div className="resume__text">
         <h2 id="resume-title" className="resume__eyebrow">
           진행 중인 게임
         </h2>
-        <p className="resume__name">{game.scenarioName}</p>
+        <p className="resume__name serif">{game.scenarioName}</p>
         <p className="resume__meta">
-          <span className="num">
-            {game.current + 1} / {game.stages.length}
-          </span>{' '}
-          단계 · {stage.name} · {state}
+          <span className="num" aria-label={`전체 ${game.stages.length}단계 중 ${game.current + 1}단계`}>
+            {pad2(game.current + 1)} / {pad2(game.stages.length)}
+          </span>
+          <span aria-hidden="true"> · </span>
+          {stage.name} · {state}
         </p>
       </div>
       <Button variant="primary" size="lg" icon="play" onClick={() => navigate({ name: 'play' })}>

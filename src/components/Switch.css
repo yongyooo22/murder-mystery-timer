@@ -7,7 +7,7 @@
 }
 
 .switch-row__icon {
-  color: var(--c-text-2);
+  color: var(--c-text-3);
 }
 
 .switch-row__text {
@@ -15,17 +15,19 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 2px;
   cursor: pointer;
 }
 
 .switch-row__label {
   color: var(--c-text);
-  font-size: var(--fs-16);
+  font-size: var(--fs-15);
+  font-weight: var(--fw-medium);
 }
 
 .switch-row__desc {
   color: var(--c-text-3);
-  font-size: var(--fs-14);
+  font-size: var(--fs-13);
 }
 
 .switch-row--disabled .switch-row__text {
@@ -36,18 +38,20 @@
   color: var(--c-text-disabled);
 }
 
-/* 켬/끔을 색과 함께 글자로도 보여 준다. */
+/* 켬/끔을 색과 함께 글자로도 보여 준다. 알약 대신 살짝 둥근 사각형. */
 .switch {
   position: relative;
   display: inline-flex;
   align-items: center;
-  width: 72px;
-  height: 36px;
+  width: 68px;
+  height: 34px;
   padding: 0 10px;
-  border-radius: var(--r-pill);
-  background: var(--c-surface-raised);
+  border-radius: var(--r-sm);
+  background: transparent;
   border: 1px solid var(--c-border-strong);
-  transition: background-color var(--dur-fast);
+  transition:
+    background-color var(--dur-fast),
+    border-color var(--dur-fast);
   flex-shrink: 0;
 }
 
@@ -55,17 +59,17 @@
 .switch::before {
   content: '';
   position: absolute;
-  inset: -5px -4px;
+  inset: -6px -4px;
 }
 
 .switch__thumb {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--c-text-2);
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+  background: var(--c-text-3);
   transition: transform var(--dur-fast) var(--ease-out);
 }
 
@@ -76,27 +80,32 @@
   color: var(--c-text-2);
 }
 
+/* 켬: 면을 꽉 채우지 않고 버건디 테두리·옅은 바탕 + 아이보리 손잡이(주요 버튼과 강조가 겹치지 않게) */
 .switch[aria-checked='true'] {
-  background: var(--c-accent);
-  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+  border-color: var(--c-accent-line);
 }
 
 .switch[aria-checked='true'] .switch__thumb {
-  transform: translateX(36px);
-  background: var(--c-on-accent);
+  transform: translateX(34px);
+  background: var(--c-text);
 }
 
 .switch[aria-checked='true'] .switch__state {
   margin-left: 0;
   margin-right: auto;
-  color: var(--c-on-accent);
+  color: var(--c-text);
 }
 
 .switch:disabled {
-  background: var(--c-disabled-bg);
-  border-color: var(--c-border);
+  background: transparent;
+  border-color: var(--c-divider);
 }
 
 .switch:disabled .switch__thumb {
-  background: var(--c-text-disabled);
+  background: var(--c-divider);
+}
+
+.switch:disabled .switch__state {
+  color: var(--c-text-disabled);
 }

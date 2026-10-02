@@ -1,3 +1,4 @@
+/* 빈 목록·불러오기 실패: 카드 없이 가운데 정렬한 짧은 안내 */
 .empty {
   display: flex;
   flex-direction: column;
@@ -11,12 +12,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   margin-bottom: var(--sp-2);
   border-radius: 50%;
   border: 1px solid var(--c-border);
-  color: var(--c-text-2);
+  color: var(--c-text-3);
 }
 
 .empty--error .empty__icon {
@@ -25,7 +26,7 @@
 }
 
 .empty__title {
-  font-size: var(--fs-18);
+  font-size: var(--fs-17);
   font-weight: var(--fw-semibold);
 }
 

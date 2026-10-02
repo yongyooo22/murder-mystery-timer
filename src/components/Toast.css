@@ -16,7 +16,7 @@
   gap: var(--sp-3);
   max-width: 480px;
   min-height: var(--h-control);
-  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-4);
   background: var(--c-surface-raised);
   border: 1px solid var(--c-border);
   border-radius: var(--r-md);
@@ -33,19 +33,19 @@
 .toast__message {
   flex: 1;
   min-width: 0;
-  padding-right: var(--sp-2);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) 0;
 }
 
 .toast__action {
   min-height: var(--tap-min);
   padding: 0 var(--sp-3);
-  border-radius: var(--r-md);
-  color: var(--c-accent);
+  border-radius: var(--r-sm);
+  color: var(--c-accent-text);
   font-weight: var(--fw-semibold);
 }
 
 .toast__action:hover {
-  background: var(--c-accent-soft);
+  background: var(--c-surface-hover);
 }
 
 @keyframes toast-in {

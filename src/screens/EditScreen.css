@@ -1,12 +1,3 @@
-.edit-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-3);
-  padding: var(--sp-12) 0;
-  color: var(--c-text-2);
-}
-
 .edit-screen {
   display: flex;
   flex-direction: column;
@@ -45,11 +36,11 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--sp-1) var(--sp-3);
-  margin-bottom: var(--sp-2);
+  margin-bottom: var(--sp-3);
 }
 
 .edit-section__hint {
-  font-size: var(--fs-14);
+  font-size: var(--fs-13);
   color: var(--c-text-3);
 }
 
@@ -57,7 +48,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
-  padding: var(--sp-5) 0;
+  padding: var(--sp-6) 0;
+  border-top: 1px solid var(--c-divider);
+  border-bottom: 1px solid var(--c-divider);
+  font-size: var(--fs-15);
   color: var(--c-text-2);
 }
 
@@ -93,10 +87,11 @@
   transition: transform 160ms var(--ease-out);
 }
 
+/* 끄는 중인 행만 잠깐 떠 보이게 한다. */
 .stage-list--dragging .stage-row--dragging {
   z-index: 2;
   transition: none;
-  background: var(--c-surface);
+  background: var(--c-surface-raised);
   border-radius: var(--r-md);
   box-shadow: var(--shadow-pop);
 }
@@ -109,7 +104,7 @@
   width: var(--tap-min);
   height: var(--h-control);
   margin-left: calc(-1 * var(--sp-2));
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   color: var(--c-text-3);
   cursor: grab;
   touch-action: none;
@@ -119,12 +114,12 @@
 
 .stage-row__handle:hover {
   color: var(--c-text);
-  background: var(--c-surface);
+  background: var(--c-surface-hover);
 }
 
 .stage-row--dragging .stage-row__handle {
   cursor: grabbing;
-  color: var(--c-accent);
+  color: var(--c-accent-text);
 }
 
 body.is-dragging {
@@ -135,12 +130,11 @@ body.is-dragging {
 
 .stage-row__index {
   grid-area: index;
-  min-width: 2ch;
-  font-size: var(--fs-16);
-  font-weight: var(--fw-semibold);
+  min-width: 2.4ch;
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
   line-height: var(--h-control);
-  color: var(--c-text-2);
-  text-align: right;
+  color: var(--c-text-3);
 }
 
 /* 긴 이름도 모두 보이도록 줄을 바꿔 늘어나는 입력칸(textarea.input 기본값을 덮어쓴다) */
@@ -148,8 +142,8 @@ body.is-dragging {
   grid-area: name;
   min-width: 0;
   min-height: var(--h-control);
-  padding: 12px 14px;
-  font-size: var(--fs-17);
+  padding: 11px 12px;
+  font-size: var(--fs-16);
   line-height: 1.35;
   resize: none;
   overflow: hidden;
@@ -203,13 +197,12 @@ body.is-dragging {
 }
 
 .time-input__field {
-  width: 76px;
+  width: 72px;
   text-align: right;
 }
 
 .time-input__unit {
-  font-size: var(--fs-17);
-  font-weight: var(--fw-medium);
+  font-size: var(--fs-15);
   color: var(--c-text-2);
 }
 
@@ -218,7 +211,7 @@ body.is-dragging {
   display: flex;
   align-items: center;
   gap: 2px;
-  margin-top: var(--sp-2);
+  margin-top: var(--sp-1);
   margin-left: calc(-1 * var(--sp-2));
   margin-right: calc(-1 * var(--sp-2));
 }
@@ -226,6 +219,7 @@ body.is-dragging {
 .stage-row__tools .btn {
   padding-left: var(--sp-2);
   padding-right: var(--sp-2);
+  font-size: var(--fs-13);
 }
 
 .stage-row__spacer {
@@ -244,20 +238,19 @@ body.is-dragging {
 
 .add-stage {
   margin-top: var(--sp-4);
-  border-style: dashed;
 }
 
 .stages-error {
   margin-top: var(--sp-3);
 }
 
-/* ---------- 빠른 입력 ---------- */
+/* ---------- 빠른 입력: 상자 대신 위아래 구분선으로 나눈 펼침 영역 ---------- */
 
 .quick {
   order: 2;
   margin-bottom: var(--sp-5);
-  border: 1px solid var(--c-border);
-  border-radius: var(--r-lg);
+  border-top: 1px solid var(--c-divider);
+  border-bottom: 1px solid var(--c-divider);
 }
 
 .quick__toggle {
@@ -266,14 +259,13 @@ body.is-dragging {
   gap: var(--sp-3);
   width: 100%;
   min-height: 60px;
-  padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--r-lg);
+  padding: var(--sp-2) 0;
   text-align: left;
-  color: var(--c-text-2);
+  color: var(--c-text-3);
 }
 
 .quick__toggle:hover {
-  background: var(--c-surface);
+  color: var(--c-text);
 }
 
 .quick__toggle-text {
@@ -283,13 +275,13 @@ body.is-dragging {
 }
 
 .quick__title {
-  font-size: var(--fs-16);
+  font-size: var(--fs-15);
   font-weight: var(--fw-semibold);
   color: var(--c-text);
 }
 
 .quick__subtitle {
-  font-size: var(--fs-14);
+  font-size: var(--fs-13);
   color: var(--c-text-3);
 }
 
@@ -297,39 +289,45 @@ body.is-dragging {
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
-  padding: 0 var(--sp-4) var(--sp-4);
+  padding: 0 0 var(--sp-4);
 }
 
 .quick__help {
-  font-size: var(--fs-15);
+  font-size: var(--fs-14);
   color: var(--c-text-2);
+}
+
+.quick__help strong {
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
 }
 
 .quick__help code {
   padding: 0 4px;
-  border-radius: 6px;
-  background: var(--c-surface-raised);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-divider);
   color: var(--c-text);
   font-family: var(--font-digits);
   font-size: 0.95em;
 }
 
+/* 입력 예시: 면 대신 왼쪽 세로선 */
 .quick__example {
-  padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--r-md);
-  background: var(--c-surface);
+  padding: var(--sp-1) 0 var(--sp-1) var(--sp-3);
+  border-left: 2px solid var(--c-border);
 }
 
 .quick__example-title {
-  font-size: var(--fs-13);
-  font-weight: var(--fw-semibold);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-label);
   color: var(--c-text-3);
 }
 
 .quick__example pre {
   margin: var(--sp-1) 0 0;
   font-family: var(--font-sans);
-  font-size: var(--fs-15);
+  font-size: var(--fs-14);
   line-height: 1.6;
   color: var(--c-text-2);
   white-space: pre-wrap;
@@ -373,7 +371,7 @@ body.is-dragging {
   margin: auto calc(-1 * var(--gutter)) 0;
   padding: var(--sp-3) var(--gutter) calc(var(--sp-3) + var(--safe-bottom));
   background: var(--c-bg);
-  border-top: 1px solid var(--c-border);
+  border-top: 1px solid var(--c-divider);
 }
 
 /* 화면 키보드가 열려 있을 때는 입력칸을 가리지 않도록 고정을 푼다. */
@@ -412,17 +410,20 @@ body.is-dragging {
 }
 
 .edit-bar__label {
-  font-size: var(--fs-13);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-label);
   color: var(--c-text-3);
 }
 
 .edit-bar__value {
   font-size: var(--fs-18);
   font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
 }
 
 .edit-bar__count {
-  font-size: var(--fs-15);
+  font-size: var(--fs-14);
   font-weight: var(--fw-regular);
   color: var(--c-text-2);
 }
@@ -434,11 +435,11 @@ body.is-dragging {
 
 /* 편집 화면에서는 잠깐 뜨는 알림이 아래 저장 영역을 가리지 않도록 위쪽에 띄운다. */
 body:has(.edit-screen) .toast-region {
-  top: calc(var(--safe-top) + 68px);
+  top: calc(var(--safe-top) + 64px);
   bottom: auto;
 }
 
-/* ---------- 가로 화면: 왼쪽 이름·단계 목록, 오른쪽 저장 영역과 빠른 입력 ---------- */
+/* ---------- 가로 화면: 왼쪽 이름·단계 목록 | 오른쪽 저장 영역과 빠른 입력(사이에 얇은 세로선) ---------- */
 
 @media (orientation: landscape) and (min-width: 560px) {
   .edit-screen {
@@ -448,13 +449,13 @@ body:has(.edit-screen) .toast-region {
   .edit-body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) clamp(260px, 30vw, 360px);
-    column-gap: clamp(24px, 3vw, 40px);
     align-items: start;
   }
 
   .edit-main {
     grid-column: 1;
     order: 0;
+    padding-right: clamp(24px, 3vw, 40px);
   }
 
   /* 오른쪽 칸은 스크롤해도 화면 위에 붙어 있어 저장 버튼이 늘 보이고, 아래 단계를 가리지 않는다. */
@@ -463,29 +464,37 @@ body:has(.edit-screen) .toast-region {
     grid-row: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--sp-4);
+    gap: var(--sp-5);
     position: sticky;
     top: 0;
+    align-self: start;
+    min-height: calc(100vh - 57px - var(--safe-top));
+    min-height: calc(100dvh - 57px - var(--safe-top));
     max-height: 100vh;
     max-height: 100dvh;
     overflow-y: auto;
-    padding: var(--sp-5) 2px calc(var(--sp-5) + var(--safe-bottom));
+    padding: var(--sp-5) 2px calc(var(--sp-5) + var(--safe-bottom)) clamp(24px, 3vw, 40px);
+    border-left: 1px solid var(--c-divider);
   }
 
   .edit-bar {
     order: 0;
     position: static;
     margin: 0;
-    padding: var(--sp-4);
-    border: 1px solid var(--c-border);
-    border-radius: var(--r-lg);
-    background: var(--c-surface);
+    padding: 0 0 var(--sp-5);
+    border-top: 0;
+    border-bottom: 1px solid var(--c-divider);
+    background: transparent;
   }
 
   .edit-bar__row {
     flex-direction: column;
     align-items: stretch;
     gap: var(--sp-3);
+  }
+
+  .edit-bar__value {
+    font-size: var(--fs-22);
   }
 
   .edit-bar__save {
@@ -495,6 +504,7 @@ body:has(.edit-screen) .toast-region {
   .quick {
     order: 0;
     margin: 0;
+    border-top: 0;
   }
 
   .edit-main .edit-section:last-child {

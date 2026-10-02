@@ -64,8 +64,8 @@ test('빠른 입력으로 만들고 저장한 뒤 열기에서 게임을 시작�
   await expect(sheet.locator('.stage-preview__row')).toHaveCount(4);
   await sheet.getByRole('button', { name: '게임 시작' }).click();
   await expect(page.getByRole('heading', { name: '사건 소개' })).toBeVisible();
-  await expect(page.locator('.play-top__step')).toContainText('1 / 4');
-  await expect(page.locator('.play-top__scenario')).toHaveText('빠른 입력 테스트');
+  await expect(page.locator('.play-step')).toHaveText('01 / 04');
+  await expect(page.locator('.play-brand__name')).toHaveText('빠른 입력 테스트');
 });
 
 test('목록을 눌러도 바로 게임이 시작되지 않는다', async ({ page, request }) => {
@@ -91,8 +91,8 @@ test('타이머: 일시정지, ±1분, 다음 단계 확인, 시간 초과, 마�
 
   await expect(page.getByRole('heading', { name: '소개' })).toBeVisible();
   // 진행 화면에는 시나리오 이름이 항상 보인다.
-  await expect(page.locator('.play-top__scenario')).toHaveText('흐름 테스트');
-  await expect(page.locator('.play-top__scenario')).toBeInViewport();
+  await expect(page.locator('.play-brand__name')).toHaveText('흐름 테스트');
+  await expect(page.locator('.play-brand__name')).toBeInViewport();
   await expect(page).toHaveTitle(/흐름 테스트/);
   await expect(digits(page)).toHaveText('05:00');
   await expect(page.getByText('진행 중', { exact: true })).toBeVisible();
@@ -289,7 +289,7 @@ test('진행 중인 게임은 목록 위에 보이고 이어갈 수 있다', asy
   const resume = page.locator('.resume');
   await expect(resume).toContainText('진행 중인 게임');
   await expect(resume).toContainText('이어가기 테스트');
-  await expect(resume).toContainText('1 / 2');
+  await expect(resume).toContainText('01 / 02');
   await resume.getByRole('button', { name: '이어가기' }).click();
   await expect(page.getByRole('heading', { name: '소개' })).toBeVisible();
 });
@@ -341,7 +341,7 @@ test('시간 초과 중 일시정지 → +1분 → 바로 다음 단계로 가�
   await page.clock.runFor(1_000);
   await expect(page.locator('.play-status__label')).toHaveText('시간 초과');
 
-  await page.locator('.play-weak', { hasText: '일시정지' }).click();
+  await page.locator('.play-nav', { hasText: '일시정지' }).click();
   await page.getByRole('button', { name: '1분 늘리기' }).click();
   await page.getByRole('button', { name: '다음 단계', exact: true }).click();
   await page.getByRole('button', { name: '다음 단계로' }).click();
@@ -402,4 +402,123 @@ test('단계가 최대 개수일 때 삭제 되돌리기로 한도를 넘지 않
   await page.getByRole('button', { name: '단계 추가' }).click();
   await page.locator('.toast__action').click();
   await expect(page.locator('.stage-row')).toHaveCount(100);
+});
+
+test('앱 제목은 Murder Mystery Timer로 목록·진행 화면과 탭 제목에 보인다', async ({ page, request }) => {
+  await createScenario(request, '제목 테스트', [['소개', 300]]);
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1, name: 'Murder Mystery Timer' })).toBeVisible();
+  await expect(page).toHaveTitle('Murder Mystery Timer');
+  await page.getByRole('button', { name: '‘제목 테스트’ 열기' }).click();
+  await page.getByRole('button', { name: '게임 시작' }).click();
+  await expect(page.locator('.play-brand__app')).toHaveText('Murder Mystery Timer');
+  await expect(page.locator('.play-brand__app')).toBeInViewport();
+  await expect(page).toHaveTitle('제목 테스트 · Murder Mystery Timer');
+});
+
+test('진행 순서: 완료·현재·예정 표시, 가로는 왼쪽 약 25%에 늘 보이고 세로는 접어 둔다', async ({ page, request }) => {
+  await createScenario(request, '순서 표시', [
+    ['하나', 120],
+    ['둘', 120],
+    ['셋', 120],
+  ]);
+  await startClock(page);
+  await page.goto('/');
+  await page.clock.pauseAt(T0 + 5_000);
+  await page.getByRole('button', { name: '‘순서 표시’ 열기' }).click();
+  await page.getByRole('button', { name: '게임 시작' }).click();
+  await page.getByRole('button', { name: '다음 단계', exact: true }).click();
+  await page.getByRole('button', { name: '다음 단계로' }).click();
+  await expect(page.getByRole('heading', { name: '둘' })).toBeVisible();
+
+  const viewport = page.viewportSize()!;
+  const landscape = viewport.width > viewport.height;
+  const toggle = page.getByRole('button', { name: '진행 순서 보기' });
+  const list = page.locator('.route-list');
+  if (landscape) {
+    // 가로: 진행 순서는 왼쪽, 타이머는 오른쪽. 왼쪽은 화면 너비의 약 25%
+    await expect(toggle).toBeHidden();
+    await expect(list).toBeVisible();
+    const side = (await page.locator('.play-route').boundingBox())!;
+    const main = (await page.locator('.play-main').boundingBox())!;
+    expect(side.x + side.width).toBeLessThanOrEqual(main.x + 1);
+    expect(side.width / viewport.width).toBeGreaterThan(0.2);
+    expect(side.width / viewport.width).toBeLessThan(0.33);
+  } else {
+    // 세로: 타이머가 먼저 보이고 진행 순서는 ‘진행 순서 보기’로 펼친다.
+    await expect(list).toBeHidden();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(list).toBeVisible();
+  }
+
+  const rows = list.locator('.route-row');
+  await expect(rows).toHaveCount(3);
+  await expect(rows.nth(0)).toHaveClass(/route-row--done/);
+  await expect(rows.nth(1)).toHaveClass(/route-row--current/);
+  await expect(rows.nth(1)).toHaveAttribute('aria-current', 'step');
+  await expect(rows.nth(2)).toHaveClass(/route-row--todo/);
+  await expect(rows.nth(1).locator('.route-row__index')).toHaveText('02');
+
+  // 목록의 행을 눌러도 단계가 바뀌지 않는다(즉시 이동 기능 없음).
+  await rows.nth(2).click();
+  await rows.nth(0).click();
+  await expect(page.getByRole('heading', { name: '둘' })).toBeVisible();
+  await expect(page.locator('.play-step')).toHaveText('02 / 03');
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+});
+
+test('알림음 버튼으로 진행 중에 알림음을 끄고 다시 켠다', async ({ page, request }) => {
+  await createScenario(request, '소리 테스트', [['소개', 300]]);
+  await page.goto('/');
+  await page.getByRole('button', { name: '‘소리 테스트’ 열기' }).click();
+  await page.getByRole('button', { name: '게임 시작' }).click();
+  const readSettings = () => page.evaluate(() => JSON.parse(localStorage.getItem('mt:settings:v1') ?? '{}'));
+
+  await page.getByRole('button', { name: '알림음 끄기' }).click();
+  await expect(page.getByRole('button', { name: '알림음 켜기' })).toBeVisible();
+  expect(await readSettings()).toMatchObject({ timeUpSound: false, warningSound: false });
+
+  await page.getByRole('button', { name: '알림음 켜기' }).click();
+  await expect(page.getByRole('button', { name: '알림음 끄기' })).toBeVisible();
+  expect(await readSettings()).toMatchObject({ timeUpSound: true, warningSound: true });
+});
+
+test('시간 초과에서도 숫자·단계 이름·버튼 위치가 그대로다', async ({ page, request }) => {
+  await createScenario(request, '위치 고정', [
+    ['하나', 70],
+    ['둘', 60],
+  ]);
+  await startClock(page);
+  await page.goto('/');
+  await page.clock.pauseAt(T0 + 5_000);
+  await page.getByRole('button', { name: '‘위치 고정’ 열기' }).click();
+  await page.getByRole('button', { name: '게임 시작' }).click();
+  await expect(page.getByRole('heading', { name: '하나' })).toBeVisible();
+
+  const boxes = async () => ({
+    stage: (await page.locator('.play-stage__name').boundingBox())!,
+    timer: (await page.locator('.play-timer').boundingBox())!,
+    primary: (await page.locator('.play-primary').boundingBox())!,
+    nav: (await page.locator('.play-nav').first().boundingBox())!,
+  });
+  const before = await boxes();
+  // 1분 이하 → 일시정지 → 계속 → 시간 초과
+  await page.clock.runFor(20_000);
+  await expect(page.locator('.play-status__label')).toHaveText('진행 중 · 1분 이하');
+  await page.getByRole('button', { name: '일시정지' }).click();
+  await expect(page.locator('.play-status__label')).toHaveText('일시정지');
+  const paused = await boxes();
+  await page.getByRole('button', { name: '계속하기' }).click();
+  await page.clock.runFor(52_000);
+  await expect(page.locator('.play-status__label')).toHaveText('시간 초과');
+  await expect(page.locator('.play-primary')).toHaveText('다음 단계 시작');
+  const over = await boxes();
+  for (const state of [paused, over]) {
+    for (const key of ['stage', 'timer', 'primary', 'nav'] as const) {
+      expect(Math.abs(state[key].y - before[key].y)).toBeLessThanOrEqual(1);
+      expect(Math.abs(state[key].height - before[key].height)).toBeLessThanOrEqual(1);
+    }
+  }
 });
