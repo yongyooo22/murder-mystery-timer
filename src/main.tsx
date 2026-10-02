@@ -2,7 +2,6 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 // 명조(시나리오 제목·단계 이름)와 산세리프(나머지 글자). 글자 범위별로 나뉘어 있어 쓰인 글자 묶음만 내려받는다.
 import '@fontsource-variable/noto-serif-kr';
-import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 import './styles/tokens.css';
 import './styles/base.css';
 import { App } from './App';
