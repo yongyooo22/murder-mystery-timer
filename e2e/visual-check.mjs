@@ -253,16 +253,40 @@ async function run() {
     await shot('list-menu');
     await page.keyboard.press('Escape');
 
-    // 상세(열기)
-    await page.locator('.scenario-row', { hasText: '저택의 밤' }).getByRole('button', { name: /열기/ }).click();
-    await page.waitForSelector('.stage-preview');
-    await shot('detail');
-    await page.goto(`${BASE}/#/scenario/${ids.many.id}`);
-    await page.waitForSelector('.stage-preview');
-    await shot('detail-many');
+    // 새 시나리오 창(템플릿 2개 + 직접 구성)
+    await page.getByRole('button', { name: '새 시나리오', exact: true }).click();
+    await page.waitForSelector('.new-scenario');
+    await shot('new-scenario');
+    await page.keyboard.press('Escape');
+
+    // 시나리오가 많은 목록
+    await page.route('**/api/scenarios', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          items: Array.from({ length: 16 }, (_, i) => ({
+            id: `many-${i}`,
+            name: i === 3 ? LONG_NAME : `시나리오 ${i + 1}`,
+            stages: STANDARD.slice(0, 3 + (i % 5)).map((st, j) => ({ id: `m${i}-${j}`, ...st })),
+            createdAt: new Date(Date.now() - i * 60_000).toISOString(),
+            updatedAt: new Date(Date.now() - i * 60_000).toISOString(),
+            rev: 1,
+            deletedAt: null,
+          })),
+          retentionDays: 30,
+        }),
+      }),
+    );
+    await page.reload();
+    await page.waitForSelector('.scenario-row');
+    await shot('list-many');
+    await page.unroute('**/api/scenarios');
 
     // 설정
     await page.goto(`${BASE}/#/`);
+    await page.reload();
+    await page.waitForSelector('.scenario-row');
     await page.getByRole('button', { name: '설정' }).click();
     await shot('settings');
     await page.keyboard.press('Escape');
@@ -296,7 +320,7 @@ async function run() {
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [], retentionDays: 30 }) }),
     );
     await page.reload();
-    await page.waitForSelector('.empty');
+    await page.waitForSelector('.list-empty');
     await shot('list-empty');
     await page.unroute('**/api/scenarios');
 
@@ -358,6 +382,7 @@ async function run() {
       await page.waitForSelector('.play-timer__digits');
       await shot(n);
     };
+    await play('play-waiting', gameState({ name: '저택의 밤', stages: STANDARD, current: 0, elapsedSec: 0, paused: true }));
     await play('play-running', gameState({ name: '저택의 밤', stages: STANDARD, current: 2, elapsedSec: 28 }));
     await play('play-paused', gameState({ name: '저택의 밤', stages: STANDARD, current: 2, elapsedSec: 400, paused: true }));
     await play('play-warning', gameState({ name: '저택의 밤', stages: STANDARD, current: 3, elapsedSec: m(20) - 42 }));

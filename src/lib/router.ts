@@ -6,7 +6,6 @@ import { useSyncExternalStore } from 'react';
  */
 export type Route =
   | { name: 'list' }
-  | { name: 'detail'; id: string }
   | { name: 'new'; template?: string }
   | { name: 'edit'; id: string }
   | { name: 'play' }
@@ -24,9 +23,6 @@ export function parseHash(hash: string): Route {
     return { name: 'list' };
   }
   switch (parts[0]) {
-    case 'scenario':
-      if (parts[1]) return { name: 'detail', id: parts[1] };
-      break;
     case 'new':
       return { name: 'new', template: params.get('template') ?? undefined };
     case 'edit':
@@ -47,8 +43,6 @@ export function routeToHash(route: Route): string {
   switch (route.name) {
     case 'list':
       return '#/';
-    case 'detail':
-      return `#/scenario/${enc(route.id)}`;
     case 'new':
       return route.template ? `#/new?template=${enc(route.template)}` : '#/new';
     case 'edit':

@@ -163,7 +163,7 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
     };
   }, [dirty]);
 
-  const fallbackRoute: Route = scenarioId ? { name: 'detail', id: scenarioId } : { name: 'list' };
+  const fallbackRoute: Route = { name: 'list' };
 
   const leave = (target: LeaveTarget) => {
     setLeaveGuard(null);
@@ -367,7 +367,7 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
     }, 0);
   };
 
-  const finishSave = (item: Scenario, isNew: boolean) => {
+  const finishSave = (item: Scenario) => {
     const pending = leaveAfterSave.current;
     leaveAfterSave.current = null;
     // 저장이 끝나기 전에 다른 화면으로 이미 나갔다면 다시 이동하지 않는다.
@@ -375,9 +375,8 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
     setLeaveGuard(null);
     setRev(item.rev);
     toast.show({ message: '저장했어요.' });
-    if (pending) goBack(pending.kind === 'back' ? { name: 'detail', id: item.id } : pending.route);
-    else if (isNew) navigate({ name: 'detail', id: item.id }, { replace: true });
-    else goBack({ name: 'detail', id: item.id });
+    // 저장하면 목록으로 돌아간다(새 시나리오는 이때 처음 목록에 보인다).
+    goBack(pending?.kind === 'route' ? pending.route : fallbackRoute);
   };
 
   const handleSaveError = (error: unknown) => {
@@ -409,13 +408,13 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
     setSaveError(errorMessage(error));
   };
 
-  const runSave = async (action: () => Promise<Scenario>, isNew: boolean) => {
+  const runSave = async (action: () => Promise<Scenario>) => {
     if (savingRef.current) return;
     savingRef.current = true;
     setSaving(true);
     setSaveError(null);
     try {
-      finishSave(await action(), isNew);
+      finishSave(await action());
     } catch (error) {
       leaveAfterSave.current = null;
       if (alive.current) handleSaveError(error);
@@ -432,20 +431,20 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
       return;
     }
     const input = draftToInput(draft);
-    if (scenarioId && rev !== null) void runSave(() => updateScenario(scenarioId, input, rev), false);
-    else void runSave(() => createScenario(input), true);
+    if (scenarioId && rev !== null) void runSave(() => updateScenario(scenarioId, input, rev));
+    else void runSave(() => createScenario(input));
   };
 
   const overwrite = () => {
     if (!conflict || !scenarioId) return;
     const serverRev = conflict.rev;
     setConflict(null);
-    void runSave(() => updateScenario(scenarioId, draftToInput(draft), serverRev), false);
+    void runSave(() => updateScenario(scenarioId, draftToInput(draft), serverRev));
   };
 
   const saveAsNew = () => {
     setGone(null);
-    void runSave(() => createScenario(draftToInput(draft)), true);
+    void runSave(() => createScenario(draftToInput(draft)));
   };
 
   /* ---------- 화면 ---------- */

@@ -72,6 +72,10 @@ interface ScenarioLike {
   stages: ReadonlyArray<{ id: string; name: string; durationSec: number }>;
 }
 
+/**
+ * 게임을 만든다. 만들기만 하고 카운트다운은 시작하지 않는다(진행 화면의 ‘시작’ 버튼 → resume).
+ * startedAt은 처음 시작할 때 다시 기록한다.
+ */
 export function startGame(scenario: ScenarioLike, gameId: string, now: number): GameState {
   if (scenario.stages.length === 0) throw new Error('단계가 없는 시나리오는 시작할 수 없어요.');
   const stages = scenario.stages.map((s) => ({ id: s.id, name: s.name, plannedSec: s.durationSec }));
@@ -85,7 +89,7 @@ export function startGame(scenario: ScenarioLike, gameId: string, now: number): 
     current: 0,
     allottedMs: stages[0].plannedSec * 1000,
     segmentBaseMs: 0,
-    runningSince: now,
+    runningSince: null,
     actualMs: stages.map(() => 0),
     visited: stages.map((_, i) => i === 0),
     warned: stages[0].plannedSec * 1000 <= WARNING_MS,
@@ -94,6 +98,10 @@ export function startGame(scenario: ScenarioLike, gameId: string, now: number): 
 }
 
 export const isRunning = (g: GameState) => g.runningSince !== null;
+
+/** 만들어 두기만 하고 아직 한 번도 시작하지 않은 게임인지 */
+export const hasStarted = (g: GameState) =>
+  g.runningSince !== null || g.current !== 0 || g.segmentBaseMs !== 0 || g.actualMs.some((ms) => ms !== 0);
 
 export function segmentElapsedMs(g: GameState, now: number): number {
   const running = g.runningSince === null ? 0 : Math.max(0, now - g.runningSince);
@@ -118,7 +126,8 @@ export function pause(g: GameState, now: number): GameState {
 
 export function resume(g: GameState, now: number): GameState {
   if (g.runningSince !== null) return g;
-  return { ...g, runningSince: now };
+  // 처음 시작하는 순간을 게임 시작 시각으로 쓴다(진행 화면에 들어와 기다린 시간은 넣지 않는다).
+  return hasStarted(g) ? { ...g, runningSince: now } : { ...g, runningSince: now, startedAt: now };
 }
 
 /** 남은 시간이 없을 때는 줄일 수 없다. */

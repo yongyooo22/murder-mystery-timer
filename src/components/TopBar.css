@@ -37,10 +37,16 @@
   padding-left: 0;
 }
 
-/* 앱 이름: 작고 자간이 넓은 영문 대문자 */
+/* 앱 이름(첫 화면): 명조 영문 대문자, 적당히 넓힌 자간 */
+.topbar--brand .topbar__inner {
+  min-height: 64px;
+}
+
 .topbar--brand .topbar__title {
-  font-size: var(--fs-13);
-  letter-spacing: var(--ls-caps);
+  font-family: var(--font-serif);
+  font-size: clamp(17px, 4.6vw, 23px);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--c-text);
 }

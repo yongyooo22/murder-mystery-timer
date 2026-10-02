@@ -22,24 +22,66 @@ async function startClock(page: Page) {
 
 const digits = (page: Page) => page.locator('.play-timer__digits');
 
+/** 목록에서 ‘실행’으로 진행 화면에 들어간 뒤 ‘시작’을 눌러 카운트다운을 시작한다. */
+async function runScenario(page: Page, name: string) {
+  await page.getByRole('button', { name: `‘${name}’ 실행` }).click();
+  await expect(page.locator('.play-status__label')).toHaveText('시작 전');
+  await page.getByRole('button', { name: '시작', exact: true }).click();
+}
+
+/** 첫 화면의 ‘새 시나리오’ 창에서 시작 방식을 고른다. */
+async function chooseNew(page: Page, choice: RegExp) {
+  await page.getByRole('button', { name: '새 시나리오', exact: true }).click();
+  await page.getByRole('dialog', { name: '새 시나리오' }).getByRole('button', { name: choice }).click();
+}
+
 test.beforeEach(async ({ request }) => {
   await resetData(request);
 });
 
-test('첫 사용: 빈 목록 안내와 새로 만들기·템플릿 사용', async ({ page }) => {
+test('첫 사용: 빈 목록 안내, 새 시나리오 창에서 템플릿 선택', async ({ page }) => {
   await page.goto('/');
+  await expect(page.getByRole('heading', { name: /내 시나리오/ })).toBeVisible();
   await expect(page.getByText('저장된 시나리오가 없어요')).toBeVisible();
-  await expect(page.getByRole('button', { name: '새로 만들기' })).toBeVisible();
-  await expect(page.getByRole('button', { name: '템플릿 사용' })).toBeVisible();
   await expect(page.getByText('© 2026 제작: 김연경(earthssaem@gmail.com)')).toBeVisible();
 
-  await page.getByRole('button', { name: '‘조사 2회’ 템플릿으로 만들기' }).click();
+  await page.getByRole('button', { name: '새 시나리오', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: '새 시나리오' });
+  await expect(dialog.getByRole('button', { name: /조사 2회\s*9단계 · 1시간 25분/ })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: /조사 3회\s*11단계 · 1시간 40분/ })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: /직접 구성/ })).toBeVisible();
+  await dialog.getByRole('button', { name: /조사 2회/ }).click();
+
   await expect(page.getByRole('heading', { name: '새 시나리오' })).toBeVisible();
   await expect(page.getByLabel('1번 단계 이름')).toHaveValue('오프닝 · 캐릭터 소개');
   await expect(page.locator('.stage-row')).toHaveCount(9);
+  // 저장하기 전에는 목록에 추가되지 않는다.
+  expect((await (await page.request.get('/api/scenarios')).json()).items).toHaveLength(0);
 });
 
-test('빠른 입력으로 만들고 저장한 뒤 열기에서 게임을 시작한다', async ({ page }) => {
+test('새 시나리오 창은 키보드로 고르고 닫을 수 있고, 직접 구성은 빈 편집 화면을 연다', async ({ page }) => {
+  await page.goto('/');
+  const open = page.getByRole('button', { name: '새 시나리오', exact: true });
+  await open.click();
+  const dialog = page.getByRole('dialog', { name: '새 시나리오' });
+  await expect(dialog.getByRole('button', { name: /조사 2회/ })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(dialog.getByRole('button', { name: /조사 3회/ })).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(dialog.getByRole('button', { name: /직접 구성/ })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(open).toBeFocused();
+
+  await open.press('Enter');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: '새 시나리오' })).toBeVisible();
+  await expect(page.locator('.stage-row')).toHaveCount(0);
+  await expect(page.getByLabel('시나리오 이름')).toHaveValue('');
+});
+
+test('빠른 입력으로 만들고 저장하면 목록에 보이고 실행할 수 있다', async ({ page }) => {
   await page.goto('/#/new');
   await page.getByLabel('시나리오 이름').fill('빠른 입력 테스트');
   await page.getByRole('button', { name: /빠른 입력/ }).click();
@@ -58,23 +100,68 @@ test('빠른 입력으로 만들고 저장한 뒤 열기에서 게임을 시작�
   await expect(page.locator('.edit-bar__value')).toContainText('50분 30초');
 
   await page.getByRole('button', { name: '저장', exact: true }).click();
-  // 저장 후 ‘열기’ 화면: 단계 구성 확인 → 게임 시작
-  const sheet = page.getByRole('dialog', { name: '빠른 입력 테스트' });
-  await expect(sheet).toBeVisible();
-  await expect(sheet.locator('.stage-preview__row')).toHaveCount(4);
-  await sheet.getByRole('button', { name: '게임 시작' }).click();
+  // 저장하면 목록으로 돌아가고 새 시나리오가 보인다 → 실행 → 시작
+  const row = page.locator('.scenario-row', { hasText: '빠른 입력 테스트' });
+  await expect(row).toContainText('4단계 · 총 50분 30초');
+  await runScenario(page, '빠른 입력 테스트');
   await expect(page.getByRole('heading', { name: '사건 소개' })).toBeVisible();
   await expect(page.locator('.play-step')).toHaveText('01 / 04');
   await expect(page.locator('.play-brand__name')).toHaveText('빠른 입력 테스트');
 });
 
-test('목록을 눌러도 바로 게임이 시작되지 않는다', async ({ page, request }) => {
+test('실행은 진행 화면으로만 이동하고, 시작을 눌러야 카운트다운이 시작된다', async ({ page, request }) => {
   await createScenario(request, '저택의 밤', [['소개', 300]]);
+  await startClock(page);
   await page.goto('/');
-  await page.locator('.scenario-row__name', { hasText: '저택의 밤' }).click();
-  await expect(page.getByRole('dialog', { name: '저택의 밤' })).toBeVisible();
-  await expect(page).toHaveURL(/#\/scenario\//);
-  await expect(page.locator('.play')).toHaveCount(0);
+  await page.clock.pauseAt(T0 + 5_000);
+  const row = page.locator('.scenario-row', { hasText: '저택의 밤' });
+  await expect(row).toContainText('1단계 · 총 5분');
+  await row.getByRole('button', { name: '‘저택의 밤’ 실행' }).click();
+  await expect(page).toHaveURL(/#\/play$/);
+  await expect(page.locator('.play-status__label')).toHaveText('시작 전');
+  await page.clock.runFor(30_000);
+  await expect(digits(page)).toHaveText('05:00');
+  await page.getByRole('button', { name: '시작', exact: true }).click();
+  await expect(page.locator('.play-status__label')).toHaveText('진행 중');
+  await page.clock.runFor(61_000);
+  await expect(digits(page)).toHaveText('03:59');
+  // 뒤로 가면 목록으로 돌아오고, 진행 중인 게임으로 보인다.
+  await page.goBack();
+  await expect(page.locator('.resume')).toContainText('저택의 밤');
+});
+
+test('더보기 메뉴: 편집·복제·삭제', async ({ page, request }) => {
+  await createScenario(request, '메뉴 테스트', [['소개', 300]]);
+  await page.goto('/');
+  const more = page.getByRole('button', { name: '‘메뉴 테스트’ 더보기' });
+  await more.click();
+  const menu = page.getByRole('menu', { name: '‘메뉴 테스트’ 더보기' });
+  await expect(menu.getByRole('menuitem')).toHaveText(['편집', '복제', '삭제']);
+  // 키보드로 옮겨 다니고 Esc로 닫으면 버튼으로 돌아온다.
+  await expect(menu.getByRole('menuitem', { name: '편집' })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(menu.getByRole('menuitem', { name: '복제' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
+  await expect(more).toBeFocused();
+
+  await more.click();
+  await page.getByRole('menuitem', { name: '복제' }).click();
+  await expect(page.locator('.scenario-row')).toHaveCount(2);
+  await expect(page.locator('.list-head__count')).toContainText('2');
+
+  await page.getByRole('button', { name: '‘메뉴 테스트’ 더보기' }).click();
+  await page.getByRole('menuitem', { name: '편집' }).click();
+  await expect(page.getByRole('heading', { name: '시나리오 편집' })).toBeVisible();
+  await page.getByLabel('시나리오 이름').fill('메뉴 테스트 수정');
+  await page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(page.locator('.scenario-row', { hasText: '메뉴 테스트 수정' })).toBeVisible();
+
+  await page.getByRole('button', { name: '‘메뉴 테스트 수정’ 더보기' }).click();
+  await page.getByRole('menuitem', { name: '삭제' }).click();
+  await page.getByRole('alertdialog', { name: '휴지통으로 옮길까요?' }).getByRole('button', { name: '휴지통으로 이동' }).click();
+  await expect(page.locator('.scenario-row')).toHaveCount(1);
+  await expect(page.locator('.scenario-row', { hasText: '메뉴 테스트 수정' })).toHaveCount(0);
 });
 
 test('타이머: 일시정지, ±1분, 다음 단계 확인, 시간 초과, 마지막 단계 마치기, 결과', async ({ page, request }) => {
@@ -86,8 +173,7 @@ test('타이머: 일시정지, ±1분, 다음 단계 확인, 시간 초과, 마�
   await startClock(page);
   await page.goto('/');
   await page.clock.pauseAt(T0 + 5_000);
-  await page.getByRole('button', { name: '‘흐름 테스트’ 열기' }).click();
-  await page.getByRole('button', { name: '게임 시작' }).click();
+  await runScenario(page, '흐름 테스트');
 
   await expect(page.getByRole('heading', { name: '소개' })).toBeVisible();
   // 진행 화면에는 시나리오 이름이 항상 보인다.
@@ -164,8 +250,7 @@ test('이전 단계로 돌아가면 원래 계획 시간으로 다시 시작하�
   await startClock(page);
   await page.goto('/');
   await page.clock.pauseAt(T0 + 5_000);
-  await page.getByRole('button', { name: '‘되돌리기’ 열기' }).click();
-  await page.getByRole('button', { name: '게임 시작' }).click();
+  await runScenario(page, '되돌리기');
 
   await page.getByRole('button', { name: '1분 늘리기' }).click();
   await page.clock.runFor(30_000);
@@ -192,7 +277,7 @@ test('이전 단계로 돌아가면 원래 계획 시간으로 다시 시작하�
 
 test('저장하지 않은 변경 사항이 있으면 나가기 전에 확인한다', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: '새로 만들기' }).click();
+  await chooseNew(page, /직접 구성/);
   await page.getByLabel('시나리오 이름').fill('작성 중');
   await page.getByRole('button', { name: '뒤로' }).click();
   const dialog = page.getByRole('alertdialog', { name: '저장하지 않은 변경 사항이 있어요' });
@@ -225,7 +310,7 @@ test('입력 오류는 해당 항목 옆에 표시하고, 저장 실패 시 입�
   await expect(page.getByLabel('시나리오 이름')).toHaveValue('실패 테스트');
   await page.unroute('**/api/scenarios');
   await page.getByRole('button', { name: '다시 저장' }).click();
-  await expect(page.getByRole('dialog', { name: '실패 테스트' })).toBeVisible();
+  await expect(page.locator('.scenario-row', { hasText: '실패 테스트' })).toBeVisible();
 });
 
 test('다른 기기에서 먼저 수정했으면 덮어쓸지 묻는다', async ({ page, request }) => {
@@ -240,7 +325,7 @@ test('다른 기기에서 먼저 수정했으면 덮어쓸지 묻는다', async 
   const dialog = page.getByRole('alertdialog', { name: '다른 기기에서 먼저 수정했어요' });
   await expect(dialog).toBeVisible();
   await dialog.getByRole('button', { name: '내 내용으로 덮어쓰기' }).click();
-  await expect(page.getByRole('dialog', { name: '충돌 테스트' })).toBeVisible();
+  await expect(page.locator('.scenario-row', { hasText: '충돌 테스트' })).toBeVisible();
   const saved = await (await request.get(`/api/scenarios/${item.id}`)).json();
   expect(saved.item.stages[0].name).toBe('내 수정');
 });
@@ -249,11 +334,11 @@ test('휴지통으로 옮기고 복원한다', async ({ page, request }) => {
   await createScenario(request, '지울 시나리오', [['소개', 300]]);
   await page.goto('/');
   await page.getByRole('button', { name: '‘지울 시나리오’ 더보기' }).click();
-  await page.getByRole('menuitem', { name: '휴지통으로 이동' }).click();
+  await page.getByRole('menuitem', { name: '삭제' }).click();
   await page.getByRole('alertdialog', { name: '휴지통으로 옮길까요?' }).getByRole('button', { name: '휴지통으로 이동' }).click();
   await expect(page.getByText('저장된 시나리오가 없어요')).toBeVisible();
 
-  await page.getByRole('button', { name: '휴지통 보기' }).click();
+  await page.getByRole('button', { name: '휴지통', exact: true }).click();
   await expect(page.locator('.trash-row')).toHaveCount(1);
   await page.getByRole('button', { name: '‘지울 시나리오’를 복원' }).click();
   await expect(page.getByText('휴지통이 비어 있어요')).toBeVisible();
@@ -271,8 +356,7 @@ test('연결이 끊기면 저장된 목록을 오프라인 표시와 함께 보�
   await expect(page.locator('.scenario-row', { hasText: '캐시 테스트' })).toBeVisible();
 
   // 오프라인이어도 저장된 구성으로 게임을 시작할 수 있다.
-  await page.getByRole('button', { name: '‘캐시 테스트’ 열기' }).click();
-  await page.getByRole('button', { name: '게임 시작' }).click();
+  await runScenario(page, '캐시 테스트');
   await expect(page.getByRole('heading', { name: '소개' })).toBeVisible();
 });
 
@@ -282,8 +366,7 @@ test('진행 중인 게임은 목록 위에 보이고 이어갈 수 있다', asy
     ['조사', 600],
   ]);
   await page.goto('/');
-  await page.getByRole('button', { name: '‘이어가기 테스트’ 열기' }).click();
-  await page.getByRole('button', { name: '게임 시작' }).click();
+  await runScenario(page, '이어가기 테스트');
   await expect(page.getByRole('heading', { name: '소개' })).toBeVisible();
   await page.goto('/');
   const resume = page.locator('.resume');
@@ -335,8 +418,7 @@ test('시간 초과 중 일시정지 → +1분 → 바로 다음 단계로 가�
   await startClock(page);
   await page.goto('/');
   await page.clock.pauseAt(T0 + 5_000);
-  await page.getByRole('button', { name: '‘잠금 테스트’ 열기' }).click();
-  await page.getByRole('button', { name: '게임 시작' }).click();
+  await runScenario(page, '잠금 테스트');
   await page.clock.runFor(61_000);
   await page.clock.runFor(1_000);
   await expect(page.locator('.play-status__label')).toHaveText('시간 초과');
@@ -356,8 +438,8 @@ test('시간 초과 중 일시정지 → +1분 → 바로 다음 단계로 가�
 test('저장 중에 뒤로 가면 저장이 끝난 뒤 한 번만 이동한다', async ({ page, request }) => {
   const item = await createScenario(request, '저장 중 이동', [['소개', 300]]);
   await page.goto('/');
-  await page.getByRole('button', { name: '‘저장 중 이동’ 열기' }).click();
-  await page.getByRole('button', { name: '편집' }).click();
+  await page.getByRole('button', { name: '‘저장 중 이동’ 더보기' }).click();
+  await page.getByRole('menuitem', { name: '편집' }).click();
   await page.getByLabel('시나리오 이름').fill('저장 중 이동 2');
   await page.route(`**/api/scenarios/${item.id}`, async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -367,9 +449,9 @@ test('저장 중에 뒤로 가면 저장이 끝난 뒤 한 번만 이동한다',
   await page.getByRole('button', { name: '뒤로' }).click();
   // 저장 중에는 ‘저장하지 않고 나가기’를 묻지 않는다(이미 보낸 저장은 취소할 수 없으므로).
   expect(await page.getByRole('alertdialog').count()).toBe(0);
-  await expect(page.getByRole('dialog', { name: '저장 중 이동 2' })).toBeVisible();
+  await expect(page.locator('.scenario-row', { hasText: '저장 중 이동 2' })).toBeVisible();
   await page.waitForTimeout(1000);
-  await expect(page).toHaveURL(new RegExp(`#/scenario/${item.id}$`));
+  await expect(page).toHaveURL(/#\/$/);
 });
 
 test('목록을 처음부터 못 불러온 상태에서 저장에 성공하면 전체 목록을 다시 불러온다', async ({ page, request }) => {
@@ -382,13 +464,11 @@ test('목록을 처음부터 못 불러온 상태에서 저장에 성공하면 �
   await expect(page.getByText('목록을 불러오지 못했어요')).toBeVisible();
   await page.unroute('**/api/scenarios');
 
-  await page.getByRole('button', { name: '새 시나리오' }).click();
+  await chooseNew(page, /직접 구성/);
   await page.getByLabel('시나리오 이름').fill('새로 만든 것');
   await page.getByRole('button', { name: '단계 추가' }).click();
   await page.getByLabel('1번 단계 이름').fill('조사');
   await page.getByRole('button', { name: '저장', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: '새로 만든 것' })).toBeVisible();
-  await page.keyboard.press('Escape');
   await expect(page.locator('.scenario-row')).toHaveCount(3);
   await expect(page.getByText('오프라인 · 저장된 목록 표시 중')).toHaveCount(0);
 });
@@ -409,8 +489,7 @@ test('앱 제목은 Murder Mystery Timer로 목록·진행 화면과 탭 제목�
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Murder Mystery Timer' })).toBeVisible();
   await expect(page).toHaveTitle('Murder Mystery Timer');
-  await page.getByRole('button', { name: '‘제목 테스트’ 열기' }).click();
-  await page.getByRole('button', { name: '게임 시작' }).click();
+  await runScenario(page, '제목 테스트');
   await expect(page.locator('.play-brand__app')).toHaveText('Murder Mystery Timer');
   await expect(page.locator('.play-brand__app')).toBeInViewport();
   await expect(page).toHaveTitle('제목 테스트 · Murder Mystery Timer');
@@ -425,8 +504,7 @@ test('진행 순서: 완료·현재·예정 표시, 가로는 왼쪽 약 25%에 
   await startClock(page);
   await page.goto('/');
   await page.clock.pauseAt(T0 + 5_000);
-  await page.getByRole('button', { name: '‘순서 표시’ 열기' }).click();
-  await page.getByRole('button', { name: '게임 시작' }).click();
+  await runScenario(page, '순서 표시');
   await page.getByRole('button', { name: '다음 단계', exact: true }).click();
   await page.getByRole('button', { name: '다음 단계로' }).click();
   await expect(page.getByRole('heading', { name: '둘' })).toBeVisible();
@@ -472,8 +550,7 @@ test('진행 순서: 완료·현재·예정 표시, 가로는 왼쪽 약 25%에 
 test('알림음 버튼으로 진행 중에 알림음을 끄고 다시 켠다', async ({ page, request }) => {
   await createScenario(request, '소리 테스트', [['소개', 300]]);
   await page.goto('/');
-  await page.getByRole('button', { name: '‘소리 테스트’ 열기' }).click();
-  await page.getByRole('button', { name: '게임 시작' }).click();
+  await runScenario(page, '소리 테스트');
   const readSettings = () => page.evaluate(() => JSON.parse(localStorage.getItem('mt:settings:v1') ?? '{}'));
 
   await page.getByRole('button', { name: '알림음 끄기' }).click();
@@ -493,8 +570,7 @@ test('시간 초과에서도 숫자·단계 이름·버튼 위치가 그대로�
   await startClock(page);
   await page.goto('/');
   await page.clock.pauseAt(T0 + 5_000);
-  await page.getByRole('button', { name: '‘위치 고정’ 열기' }).click();
-  await page.getByRole('button', { name: '게임 시작' }).click();
+  await runScenario(page, '위치 고정');
   await expect(page.getByRole('heading', { name: '하나' })).toBeVisible();
 
   const boxes = async () => ({

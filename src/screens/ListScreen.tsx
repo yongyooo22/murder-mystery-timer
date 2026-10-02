@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Button, IconButton } from '../components/Button';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
@@ -17,34 +17,31 @@ import {
   useScenarioList,
   type ScenarioListState,
 } from '../data/scenarioStore';
-import { TEMPLATES } from '../data/templates';
 import type { Scenario } from '../data/types';
-import { isOvertime, isRunning } from '../game/engine';
+import { hasStarted, isOvertime, isRunning } from '../game/engine';
 import { useGameStore } from '../game/gameStore';
+import { useStartGame } from '../game/useStartGame';
 import { quotedObject } from '../lib/korean';
 import { navigate } from '../lib/router';
 import { durationText, sumDurationSec, timeOfDayText } from '../lib/time';
-import { RenameDialog } from './RenameDialog';
-import { ScenarioDetailSheet } from './ScenarioDetailSheet';
+import { NewScenarioDialog } from './NewScenarioDialog';
 import { SettingsModal } from './SettingsModal';
 import './ListScreen.css';
 
-export function ListScreen({ detailId }: { detailId: string | null }) {
+/**
+ * 첫 화면: 저장된 시나리오 목록 하나를 가운데 한 열로 보여 준다.
+ * 설명·시간·버튼은 고딕(ui-gothic), 앱 이름·시나리오 제목만 명조.
+ */
+export function ListScreen() {
   const list = useScenarioList();
-  const { game } = useGameStore();
   const toast = useToast();
-  const templatesRef = useRef<HTMLHeadingElement>(null);
+  const startGame = useStartGame({ replace: false });
+  const [creating, setCreating] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [renaming, setRenaming] = useState<Scenario | null>(null);
   const [trashing, setTrashing] = useState<Scenario | null>(null);
   const [trashBusy, setTrashBusy] = useState(false);
   const [trashError, setTrashError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-
-  const showTemplates = () => {
-    templatesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    templatesRef.current?.focus({ preventScroll: true });
-  };
 
   const onDuplicate = async (scenario: Scenario) => {
     setActionError(null);
@@ -82,39 +79,50 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
   };
 
   const hasList = list.source !== 'none';
-  const isEmpty = hasList && list.items.length === 0;
-  // 버건디로 채운 주요 버튼은 화면에 하나만: 진행 중인 게임이 있으면 ‘이어가기’, 없으면 ‘새 시나리오’
-  const createVariant = game ? 'secondary' : 'primary';
+  const offline = list.status === 'offline';
 
   return (
-    <div className="screen list-screen">
+    <div className="screen list-screen ui-gothic">
       <TopBar
         variant="brand"
         title={<span lang="en">{APP_CONFIG.name}</span>}
-        right={<IconButton icon="settings" label="설정" onClick={() => setSettingsOpen(true)} />}
+        right={<IconButton icon="settings" label="설정" size={20} onClick={() => setSettingsOpen(true)} />}
       />
 
-      {/* 가로 화면: 왼쪽 진행 중인 게임·템플릿, 오른쪽 저장된 시나리오(ListScreen.css) */}
-      <main className="screen__body list-layout">
+      <main className="screen__body list-body">
         <ResumeGame />
 
-        <section className="section list-saved" aria-labelledby="saved-title">
-          <div className="section__head">
-            <h2 id="saved-title" className="section__title">
-              저장된 시나리오
-              {hasList && <span className="list-count num">{list.items.length}</span>}
+        <section className="list-section" aria-labelledby="saved-title">
+          <div className="list-head">
+            <h2 id="saved-title" className="list-head__title">
+              내 시나리오
+              {hasList && (
+                <span className="list-head__count">
+                  {list.items.length}
+                  <span className="visually-hidden">개</span>
+                </span>
+              )}
             </h2>
-            <Button
-              size="sm"
-              variant="ghost"
-              icon="refresh"
-              loading={list.status === 'loading'}
-              onClick={() => void refreshScenarios()}
-            >
-              새로고침
+            <Button variant="primary" icon="plus" className="list-head__new" onClick={() => setCreating(true)}>
+              새 시나리오
             </Button>
           </div>
-          <SyncStatus list={list} />
+
+          {hasList && offline && (
+            <InlineAlert
+              tone="offline"
+              className="list-alert"
+              title="오프라인 · 저장된 목록 표시 중"
+              actions={
+                <Button size="sm" icon="refresh" onClick={() => void refreshScenarios()}>
+                  다시 연결
+                </Button>
+              }
+            >
+              {list.syncedAt ? `${timeOfDayText(list.syncedAt)}에 받아 둔 목록이에요. ` : ''}
+              저장·수정은 연결된 뒤에 할 수 있어요. 게임은 지금도 실행할 수 있어요.
+            </InlineAlert>
+          )}
 
           {actionError && (
             <InlineAlert tone="error" className="list-alert" onDismiss={() => setActionError(null)}>
@@ -122,58 +130,43 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
             </InlineAlert>
           )}
 
-          {isEmpty && (
-            <EmptyState
-              icon="list"
-              title="저장된 시나리오가 없어요"
-              actions={
-                <>
-                  <Button variant={createVariant} size="lg" icon="plus" onClick={() => navigate({ name: 'new' })}>
-                    새로 만들기
+          <div className="list-panel">
+            {!hasList && list.status === 'loading' && (
+              <div className="list-loading loading-line" role="status">
+                <Spinner size={22} />
+                <span>불러오는 중…</span>
+              </div>
+            )}
+
+            {!hasList && offline && (
+              <EmptyState
+                icon="offline"
+                tone="error"
+                title="목록을 불러오지 못했어요"
+                actions={
+                  <Button icon="refresh" onClick={() => void refreshScenarios()}>
+                    다시 시도
                   </Button>
-                  <Button size="lg" icon="template" onClick={showTemplates}>
-                    템플릿 사용
-                  </Button>
-                </>
-              }
-            >
-              직접 단계를 만들거나 템플릿으로 시작해 보세요.
-            </EmptyState>
-          )}
+                }
+              >
+                {list.error}
+              </EmptyState>
+            )}
 
-          {!isEmpty && (
-            <div className="list-new">
-              <Button variant={createVariant} size="lg" icon="plus" block onClick={() => navigate({ name: 'new' })}>
-                새 시나리오
-              </Button>
-            </div>
-          )}
+            {hasList && list.items.length === 0 && (
+              <div className="list-empty">
+                <p className="list-empty__title">저장된 시나리오가 없어요</p>
+                <p className="list-empty__body">‘새 시나리오’에서 템플릿을 고르거나 직접 구성해 보세요.</p>
+              </div>
+            )}
 
-          {!hasList && list.status === 'loading' && <LoadingList />}
-
-          {!hasList && list.status === 'offline' && (
-            <EmptyState
-              icon="offline"
-              tone="error"
-              title="목록을 불러오지 못했어요"
-              actions={
-                <Button size="lg" icon="refresh" onClick={() => void refreshScenarios()}>
-                  다시 시도
-                </Button>
-              }
-            >
-              {list.error}
-            </EmptyState>
-          )}
-
-          {hasList && list.items.length > 0 && (
-            <>
+            {hasList && list.items.length > 0 && (
               <ul className="scenario-list">
                 {list.items.map((scenario) => (
                   <ScenarioRow
                     key={scenario.id}
                     scenario={scenario}
-                    onRename={() => setRenaming(scenario)}
+                    onRun={() => startGame.request({ id: scenario.id, name: scenario.name, stages: scenario.stages })}
                     onDuplicate={() => void onDuplicate(scenario)}
                     onTrash={() => {
                       setTrashError(null);
@@ -182,52 +175,22 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
                   />
                 ))}
               </ul>
-            </>
-          )}
+            )}
+          </div>
 
-          <div className="list-footer">
-            <Button variant="ghost" size="sm" icon="trash" onClick={() => navigate({ name: 'trash' })}>
-              휴지통 보기
+          <div className="list-foot">
+            <SyncStatus list={list} />
+            <Button variant="ghost" size="sm" icon="trash" className="list-foot__trash" onClick={() => navigate({ name: 'trash' })}>
+              휴지통
             </Button>
           </div>
-        </section>
-
-        <section className="section list-templates" aria-labelledby="template-title">
-          <div className="section__head">
-            <h2 id="template-title" className="section__title" ref={templatesRef} tabIndex={-1}>
-              템플릿으로 만들기
-            </h2>
-          </div>
-          <p className="section__desc template-desc">템플릿을 고르면 단계가 채워진 편집 화면이 열려요. 저장해야 목록에 추가돼요.</p>
-          <ul className="template-list">
-            {TEMPLATES.map((template) => (
-              <li key={template.key} className="template-row">
-                <div className="template-row__text">
-                  <p className="template-row__name">{template.name}</p>
-                  <p className="template-row__meta">
-                    {template.stages.length}단계 · {durationText(sumDurationSec(template.stages))}
-                  </p>
-                  <p className="template-row__desc">{template.description}</p>
-                </div>
-                <Button
-                  size="sm"
-                  icon="template"
-                  aria-label={`‘${template.name}’ 템플릿으로 만들기`}
-                  onClick={() => navigate({ name: 'new', template: template.key })}
-                >
-                  만들기
-                </Button>
-              </li>
-            ))}
-          </ul>
         </section>
       </main>
 
       <footer className="list-credit">{APP_CONFIG.credit}</footer>
 
-      <ScenarioDetailSheet id={detailId} />
+      <NewScenarioDialog open={creating} onClose={() => setCreating(false)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      <RenameDialog scenario={renaming} onClose={() => setRenaming(null)} />
       <ConfirmDialog
         open={trashing !== null}
         title="휴지통으로 옮길까요?"
@@ -243,75 +206,69 @@ export function ListScreen({ detailId }: { detailId: string | null }) {
           복원할 수 있어요.
         </p>
       </ConfirmDialog>
+      {startGame.dialog}
     </div>
   );
 }
 
+/** 목록 아래 왼쪽: 작은 새로고침 버튼과 마지막으로 불러온 시각 */
 function SyncStatus({ list }: { list: ScenarioListState }) {
-  if (list.source !== 'none' && list.status === 'offline') {
-    return (
-      <InlineAlert
-        tone="offline"
-        className="list-alert"
-        title="오프라인 · 저장된 목록 표시 중"
-        actions={
-          <Button size="sm" icon="refresh" onClick={() => void refreshScenarios()}>
-            다시 연결
-          </Button>
-        }
-      >
-        {list.syncedAt ? `${timeOfDayText(list.syncedAt)}에 받아 둔 목록이에요. ` : ''}
-        저장·수정은 연결된 뒤에 할 수 있어요. 게임은 지금도 시작할 수 있어요.
-      </InlineAlert>
-    );
-  }
+  const loading = list.status === 'loading';
+  const text = loading
+    ? '불러오는 중…'
+    : list.status === 'offline'
+      ? '오프라인'
+      : list.syncedAt
+        ? `${timeOfDayText(list.syncedAt)} 기준`
+        : '';
   return (
-    <div className="sync-line">
-      <p className="sync-line__state" role="status">
-        {list.status === 'loading' ? '불러오는 중…' : list.syncedAt ? `${timeOfDayText(list.syncedAt)} 기준` : ''}
-      </p>
-    </div>
-  );
-}
-
-function LoadingList() {
-  return (
-    <div className="list-loading loading-line" role="status">
-      <Spinner size={22} />
-      <span>불러오는 중…</span>
+    <div className="list-sync">
+      <Button
+        variant="ghost"
+        size="sm"
+        icon="refresh"
+        className="list-sync__refresh"
+        aria-label="목록 새로고침"
+        title="목록 새로고침"
+        loading={loading}
+        onClick={() => void refreshScenarios()}
+      />
+      <span className="list-sync__state" role="status">
+        {text}
+      </span>
     </div>
   );
 }
 
 interface ScenarioRowProps {
   scenario: Scenario;
-  onRename: () => void;
+  onRun: () => void;
   onDuplicate: () => void;
   onTrash: () => void;
 }
 
-function ScenarioRow({ scenario, onRename, onDuplicate, onTrash }: ScenarioRowProps) {
-  const open = () => navigate({ name: 'detail', id: scenario.id });
+function ScenarioRow({ scenario, onRun, onDuplicate, onTrash }: ScenarioRowProps) {
   return (
-    // 행 아무 곳이나 눌러도 ‘열기’와 같다(바로 게임이 시작되지는 않는다).
-    <li className="scenario-row" onClick={open}>
+    <li className="scenario-row">
       <div className="scenario-row__text">
         <p className="scenario-row__name serif">{scenario.name}</p>
         <p className="scenario-row__meta">
           {scenario.stages.length}단계 · 총 {durationText(sumDurationSec(scenario.stages))}
         </p>
       </div>
-      <div className="scenario-row__actions" onClick={(event) => event.stopPropagation()}>
-        <Button size="sm" onClick={open} aria-label={`‘${scenario.name}’ 열기`}>
-          열기
+      <div className="scenario-row__actions">
+        {/* 진행 화면으로 이동만 한다. 카운트다운은 진행 화면의 ‘시작’으로 시작한다. */}
+        <Button icon="play" className="scenario-row__run" aria-label={`‘${scenario.name}’ 실행`} onClick={onRun}>
+          실행
         </Button>
         <Menu
           label={`‘${scenario.name}’ 더보기`}
+          className="ui-gothic"
           items={[
-            { label: '이름 바꾸기', icon: 'edit', onSelect: onRename },
+            { label: '편집', icon: 'edit', onSelect: () => navigate({ name: 'edit', id: scenario.id }) },
             { label: '복제', icon: 'copy', onSelect: onDuplicate },
             { type: 'separator' },
-            { label: '휴지통으로 이동', icon: 'trash', tone: 'danger', onSelect: onTrash },
+            { label: '삭제', icon: 'trash', tone: 'danger', onSelect: onTrash },
           ]}
         />
       </div>
@@ -324,7 +281,13 @@ function ResumeGame() {
   if (!game) return null;
   const now = Date.now();
   const stage = game.stages[game.current];
-  const state = isOvertime(game, now) ? '시간 초과' : isRunning(game) ? '진행 중' : '일시정지';
+  const state = !hasStarted(game)
+    ? '시작 전'
+    : isOvertime(game, now)
+      ? '시간 초과'
+      : isRunning(game)
+        ? '진행 중'
+        : '일시정지';
   const pad2 = (n: number) => String(n).padStart(2, '0');
   return (
     <section className="resume" aria-labelledby="resume-title">
@@ -341,7 +304,7 @@ function ResumeGame() {
           {stage.name} · {state}
         </p>
       </div>
-      <Button variant="primary" size="lg" icon="play" onClick={() => navigate({ name: 'play' })}>
+      <Button icon="play" className="resume__go" onClick={() => navigate({ name: 'play' })}>
         이어가기
       </Button>
     </section>

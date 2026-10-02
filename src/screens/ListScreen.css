@@ -1,68 +1,136 @@
 /*
- * 시나리오 목록. 카드 없이 시나리오 이름(명조)이 중심인 행을 얇은 구분선으로 나눈다.
- * 가로 화면: 왼쪽에 진행 중인 게임·템플릿, 오른쪽에 저장된 시나리오(사이에 얇은 세로선).
+ * 첫 화면(시나리오 목록). 가운데 한 열(최대 1,040px), 머리글도 같은 너비·정렬을 쓴다.
+ * 목록은 배경보다 한 톤 밝은 면(#252528)으로 구분하고, 행은 얇은 구분선으로 나눈다.
+ * 장식·질감·그림자 없이 색·글꼴·여백으로만 정리한다.
  */
-.list-screen .screen__body {
-  padding-bottom: calc(var(--sp-12) + var(--safe-bottom));
-}
-
-.list-count {
-  margin-left: var(--sp-2);
-  font-size: var(--fs-14);
-  font-weight: var(--fw-medium);
-  color: var(--c-text-3);
-}
-
-/* 공유 안내 + 마지막으로 불러온 시각 */
-.sync-line {
+.list-screen {
+  --content-max: calc(1040px + var(--gutter) * 2);
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: flex-end;
-  column-gap: var(--sp-3);
-  row-gap: 2px;
-  margin-top: calc(-1 * var(--sp-1));
-  font-size: var(--fs-13);
-  color: var(--c-text-3);
+  flex-direction: column;
 }
 
-.sync-line__state {
-  white-space: nowrap;
-}
-
-.list-alert {
-  margin-top: var(--sp-3);
-}
-
-.list-new {
-  margin-top: var(--sp-5);
+.list-body {
+  flex: 1 0 auto;
+  padding-top: var(--sp-6);
 }
 
 @media (min-width: 600px) {
-  .list-new {
-    display: flex;
-    justify-content: flex-end;
-  }
-  .list-new .btn--block {
-    width: auto;
-    min-width: 180px;
+  .list-body {
+    padding-top: var(--sp-8);
   }
 }
 
-/* 저장된 시나리오: 이름이 중심인 한 열 목록 */
-.scenario-list {
-  margin-top: var(--sp-4);
-  border-top: 1px solid var(--c-divider);
+/* ---------- 진행 중인 게임 ---------- */
+
+.resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3) var(--sp-5);
+  margin-bottom: var(--sp-8);
+  padding: var(--sp-4) var(--sp-5);
+  border-left: 3px solid var(--c-accent-line);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+}
+
+.resume__text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.resume__eyebrow {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-label);
+  color: var(--c-text-2);
+}
+
+.resume__name {
+  margin-top: 2px;
+  font-size: var(--fs-20);
+  color: var(--c-text);
+}
+
+.resume__meta {
+  margin-top: 2px;
+  font-size: var(--fs-14);
+  color: var(--c-text-2);
+}
+
+.resume__go {
+  flex: 0 0 auto;
+  padding-left: var(--sp-5);
+  padding-right: var(--sp-5);
+}
+
+/* ---------- 목록 머리: 내 시나리오(개수) · 새 시나리오 ---------- */
+
+.list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.list-head__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  min-width: 0;
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  color: var(--c-text);
+}
+
+.list-head__count {
+  font-size: var(--fs-16);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-2);
+}
+
+.list-head__new {
+  flex-shrink: 0;
+  padding-left: var(--sp-5);
+  padding-right: var(--sp-5);
+}
+
+.list-alert {
+  margin-bottom: var(--sp-3);
+}
+
+/* ---------- 목록 면과 행 ---------- */
+
+.list-panel {
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  overflow: hidden;
 }
 
 .scenario-row {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  min-height: 80px;
-  padding: var(--sp-4) 0;
-  border-bottom: 1px solid var(--c-divider);
-  cursor: pointer;
+  padding: var(--sp-4);
+  transition: background-color var(--dur-fast);
+}
+
+.scenario-row + .scenario-row {
+  border-top: 1px solid var(--c-divider);
+}
+
+/* 마우스를 올리거나 행 안의 버튼에 키보드 포커스가 있으면 은은하게 밝힌다. */
+.scenario-row:focus-within {
+  background: var(--c-surface-hover);
+}
+
+@media (hover: hover) {
+  .scenario-row:hover {
+    background: var(--c-surface-hover);
+  }
 }
 
 .scenario-row__text {
@@ -70,15 +138,18 @@
   min-width: 0;
 }
 
+/* 긴 제목은 줄을 바꿔 모두 보여 준다(버튼 영역은 침범하지 않는다). */
 .scenario-row__name {
-  font-size: var(--fs-20);
+  font-size: var(--fs-18);
   color: var(--c-text);
 }
 
 .scenario-row__meta {
   margin-top: var(--sp-1);
-  font-size: var(--fs-13);
-  color: var(--c-text-3);
+  font-size: var(--fs-14);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-tight);
+  color: var(--c-text-2);
 }
 
 .scenario-row__actions {
@@ -86,178 +157,112 @@
   align-items: center;
   gap: var(--sp-1);
   flex-shrink: 0;
-  cursor: default;
 }
 
-@media (hover: hover) {
-  .scenario-row:hover .scenario-row__name {
-    color: var(--c-accent-text);
+.scenario-row__run {
+  padding-left: var(--sp-4);
+  padding-right: var(--sp-4);
+}
+
+.scenario-row__actions .icon-btn {
+  margin-right: calc(-1 * var(--sp-2));
+}
+
+/* 아주 좁은 화면: 실행 버튼의 아이콘을 빼서 제목 자리를 넓힌다. */
+@media (max-width: 379px) {
+  .scenario-row__run svg {
+    display: none;
+  }
+
+  .scenario-row__run {
+    padding-left: var(--sp-3);
+    padding-right: var(--sp-3);
   }
 }
 
-.list-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--sp-3);
+@media (min-width: 600px) {
+  .list-head__title {
+    font-size: var(--fs-22);
+  }
+
+  .scenario-row {
+    gap: var(--sp-5);
+    padding: var(--sp-5) var(--sp-6);
+  }
+
+  .scenario-row__name {
+    font-size: 1.3125rem; /* 21px */
+  }
+
+  .scenario-row__meta {
+    font-size: var(--fs-15);
+  }
+
+  .scenario-row__actions {
+    gap: var(--sp-2);
+  }
 }
 
-.list-footer .btn {
+/* 빈 목록 */
+.list-empty {
+  padding: var(--sp-10) var(--sp-5);
+  text-align: center;
+}
+
+.list-empty__title {
+  font-size: var(--fs-17);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+
+.list-empty__body {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-15);
+  color: var(--c-text-2);
+}
+
+/* ---------- 목록 아래: 새로고침·갱신 시각 | 휴지통 ---------- */
+
+.list-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.list-sync {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  margin-left: calc(-1 * var(--sp-3));
+}
+
+.list-sync__refresh {
+  padding-left: var(--sp-3);
+  padding-right: var(--sp-3);
+}
+
+.list-sync__state {
+  font-size: var(--fs-14);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-2);
+  white-space: nowrap;
+}
+
+.list-foot__trash {
+  flex-shrink: 0;
   margin-right: calc(-1 * var(--sp-3));
 }
 
 /* 맨 아래 제작자 표기 */
 .list-credit {
+  width: 100%;
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: var(--sp-6) var(--gutter) var(--sp-5);
-  font-size: var(--fs-12);
+  padding: var(--sp-10) var(--gutter) calc(var(--sp-6) + var(--safe-bottom));
+  font-size: var(--fs-13);
   color: var(--c-text-3);
   text-align: center;
-}
-
-/* 진행 중인 게임: 카드 대신 짧은 버건디 세로선과 구분선 */
-.resume {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--sp-4);
-  padding: var(--sp-6) 0;
-  border-bottom: 1px solid var(--c-divider);
-}
-
-.resume__text {
-  flex: 1 1 220px;
-  min-width: 0;
-}
-
-.resume__eyebrow {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  font-size: var(--fs-13);
-  font-weight: var(--fw-medium);
-  letter-spacing: var(--ls-label);
-  color: var(--c-text-2);
-}
-
-.resume__eyebrow::before {
-  content: '';
-  width: 3px;
-  height: 1.1em;
-  border-radius: 1px;
-  background: var(--c-accent-line);
-}
-
-.resume__name {
-  margin-top: var(--sp-2);
-  font-size: var(--fs-22);
-  color: var(--c-text);
-}
-
-.resume__meta {
-  margin-top: var(--sp-1);
-  font-size: var(--fs-14);
-  color: var(--c-text-2);
-}
-
-.resume .btn {
-  flex: 1 1 160px;
-}
-
-@media (min-width: 600px) {
-  .resume .btn {
-    flex: 0 0 auto;
-    min-width: 160px;
-  }
-}
-
-/* 템플릿 */
-.template-desc {
-  margin-top: calc(-1 * var(--sp-1));
-}
-
-.template-list {
-  margin-top: var(--sp-3);
-  border-top: 1px solid var(--c-divider);
-}
-
-.template-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-4) 0;
-  border-bottom: 1px solid var(--c-divider);
-}
-
-.template-row__text {
-  flex: 1;
-  min-width: 0;
-}
-
-.template-row__name {
-  font-size: var(--fs-16);
-  font-weight: var(--fw-semibold);
-}
-
-.template-row__meta {
-  font-size: var(--fs-13);
-  color: var(--c-text-2);
-}
-
-.template-row__desc {
-  margin-top: 2px;
-  font-size: var(--fs-13);
-  color: var(--c-text-3);
-}
-
-.section__title[tabindex='-1']:focus-visible {
-  outline-offset: 4px;
-}
-
-/* ---------- 가로 화면: 두 칸 배치(사이에 얇은 세로선) ---------- */
-
-@media (orientation: landscape) and (min-width: 560px) {
-  .list-screen {
-    --content-max: 1200px;
-  }
-
-  .list-layout {
-    display: grid;
-    grid-template-columns: minmax(240px, 34%) minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      'resume saved'
-      'templates saved';
-    align-items: start;
-  }
-
-  .list-layout > .resume,
-  .list-layout > .list-templates {
-    padding-right: clamp(24px, 3.5vw, 48px);
-  }
-
-  .list-layout > .resume {
-    grid-area: resume;
-  }
-
-  .list-layout > .list-saved {
-    grid-area: saved;
-    align-self: stretch;
-    /* 세로선이 화면 아래까지 이어지도록(위 막대 57px, 아래 여백 제외) */
-    min-height: calc(100vh - 57px - var(--safe-top) - var(--safe-bottom) - var(--sp-12));
-    min-height: calc(100dvh - 57px - var(--safe-top) - var(--safe-bottom) - var(--sp-12));
-    padding-left: clamp(24px, 3.5vw, 48px);
-    border-top: 0;
-    border-left: 1px solid var(--c-divider);
-  }
-
-  .list-layout > .list-templates {
-    grid-area: templates;
-    border-top: 0;
-  }
-
-  /* 왼쪽 칸이 좁으므로 이어가기 버튼은 칸 너비에 맞춘다. */
-  .list-layout > .resume .btn {
-    flex: 1 1 100%;
-  }
 }
