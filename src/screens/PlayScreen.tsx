@@ -13,6 +13,7 @@ import {
   checkAlerts,
   currentStage,
   goToStage,
+  hasStarted,
   isLastStage,
   isRunning,
   nextStage,
@@ -60,7 +61,7 @@ export function PlayScreen() {
 }
 
 type ConfirmKind = 'prev' | 'next' | 'finishEarly' | 'end';
-type PrimaryRole = 'pause' | 'resume' | 'next' | 'finish';
+type PrimaryRole = 'start' | 'pause' | 'resume' | 'next' | 'finish';
 type Tone = 'normal' | 'warn' | 'over';
 
 const TICK_MS = 250;
@@ -74,6 +75,7 @@ const COLON_EM = 0.32;
 const LONG_STAGE_NAME = 16;
 
 const PRIMARY: Record<PrimaryRole, { label: string; icon: IconName }> = {
+  start: { label: '시작', icon: 'play' },
   pause: { label: '일시정지', icon: 'pause' },
   resume: { label: '계속하기', icon: 'play' },
   next: { label: '다음 단계 시작', icon: 'skip-forward' },
@@ -104,6 +106,8 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
   useWakeLock(settings.keepAwake);
 
   const running = isRunning(game);
+  // 목록에서 ‘실행’으로 들어오면 시작 전 상태로 기다린다. 카운트다운은 ‘시작’을 눌러야 시작한다.
+  const waiting = !hasStarted(game);
   const remaining = remainingMs(game, now);
   const overtime = remaining <= 0;
   const warning = !overtime && remaining <= WARNING_MS;
@@ -112,7 +116,7 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
   const next = nextStage(game);
   const prev = previousStage(game);
   const last = isLastStage(game);
-  const role: PrimaryRole = overtime ? (last ? 'finish' : 'next') : running ? 'pause' : 'resume';
+  const role: PrimaryRole = overtime ? (last ? 'finish' : 'next') : running ? 'pause' : waiting ? 'start' : 'resume';
 
   /* 실행 중에는 0.25초마다 다시 그린다. 남은 시간은 항상 시각 차이로 계산하므로 지연돼도 어긋나지 않는다. */
   useEffect(() => {
@@ -232,11 +236,13 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
     navigate({ name: 'result' }, { replace: true });
   };
   const togglePause = () =>
-    running ? act((g, t) => pause(g, t), '일시정지했어요.') : act((g, t) => resume(g, t), '다시 진행해요.');
+    running
+      ? act((g, t) => pause(g, t), '일시정지했어요.')
+      : act((g, t) => resume(g, t), waiting ? '게임을 시작했어요.' : '다시 진행해요.');
 
   const onPrimary = () => {
     if (Date.now() < lockedUntil.current) return;
-    if (role === 'pause' || role === 'resume') togglePause();
+    if (role === 'start' || role === 'pause' || role === 'resume') togglePause();
     else if (role === 'next') goNext();
     else finish();
   };
@@ -270,12 +276,14 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
     ? running
       ? '시간 초과'
       : '일시정지 · 시간 초과'
-    : !running
-      ? '일시정지'
-      : warning
-        ? '진행 중 · 1분 이하'
-        : '진행 중';
-  const statusIcon: IconName = overtime ? 'alert' : !running ? 'pause' : warning ? 'clock' : 'play';
+    : waiting
+      ? '시작 전'
+      : !running
+        ? '일시정지'
+        : warning
+          ? '진행 중 · 1분 이하'
+          : '진행 중';
+  const statusIcon: IconName = overtime ? 'alert' : waiting ? 'clock' : !running ? 'pause' : warning ? 'clock' : 'play';
   const remainingWords = overtime ? `초과 ${durationText(Math.floor(-remaining / 1000))}` : `남은 시간 ${durationText(Math.ceil(remaining / 1000))}`;
   const total = totalRemainingMs(game, now);
   const progress = stageProgress(game, now);

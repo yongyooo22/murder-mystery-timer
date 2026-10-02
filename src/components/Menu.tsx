@@ -12,13 +12,15 @@ interface MenuProps {
   /** 더보기 버튼의 접근 가능한 이름. 예: ‘저택의 밤’ 더보기 */
   label: string;
   items: MenuItem[];
+  /** 펼친 메뉴에 붙일 클래스(예: 글꼴을 바꾸는 ui-gothic) */
+  className?: string;
 }
 
 const MENU_WIDTH = 220;
 const VIEWPORT_MARGIN = 8;
 
 /** 더보기(⋯) 버튼과 펼침 메뉴 */
-export function Menu({ label, items }: MenuProps) {
+export function Menu({ label, items, className }: MenuProps) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -27,6 +29,7 @@ export function Menu({ label, items }: MenuProps) {
 
   const close = (restoreFocus = true) => {
     setOpen(false);
+    setPosition(null);
     if (restoreFocus) triggerRef.current?.focus({ preventScroll: true });
   };
 
@@ -48,9 +51,14 @@ export function Menu({ label, items }: MenuProps) {
     }
   }, [open]);
 
+  // 위치를 잡아 메뉴가 보이게 된 뒤에 첫 항목으로 포커스를 옮긴다(숨겨진 동안에는 포커스할 수 없다).
+  const shown = open && position !== null;
+  useEffect(() => {
+    if (shown) menuRef.current?.querySelector<HTMLButtonElement>('button:not([disabled])')?.focus({ preventScroll: true });
+  }, [shown]);
+
   useEffect(() => {
     if (!open) return;
-    menuRef.current?.querySelector<HTMLButtonElement>('button:not([disabled])')?.focus({ preventScroll: true });
 
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
@@ -102,7 +110,7 @@ export function Menu({ label, items }: MenuProps) {
           <div
             ref={menuRef}
             id={menuId}
-            className="menu"
+            className={['menu', className].filter(Boolean).join(' ')}
             role="menu"
             aria-label={label}
             style={{

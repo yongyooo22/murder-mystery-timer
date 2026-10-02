@@ -5,14 +5,18 @@ import { discardGame, startNewGame, useGameStore } from './gameStore';
 
 type StartInput = Parameters<typeof startNewGame>[0];
 
-/** 게임 시작. 이미 진행 중인 게임이 있으면 확인한 뒤 시작한다. */
-export function useStartGame() {
+/**
+ * 게임을 만들고 진행 화면으로 간다(카운트다운은 진행 화면의 ‘시작’으로 시작한다).
+ * 이미 진행 중인 게임이 있으면 확인한 뒤 바꾼다.
+ * replace: 지금 화면을 기록에서 바꿀지(결과 화면) 쌓을지(목록: 뒤로 가면 목록으로 돌아온다).
+ */
+export function useStartGame({ replace = true }: { replace?: boolean } = {}) {
   const { game } = useGameStore();
   const [pending, setPending] = useState<StartInput | null>(null);
 
   const start = (input: StartInput) => {
     startNewGame(input);
-    navigate({ name: 'play' }, { replace: true });
+    navigate({ name: 'play' }, { replace });
   };
 
   const request = (input: StartInput) => {

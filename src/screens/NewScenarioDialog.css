@@ -1,0 +1,62 @@
+/* 새 시나리오: 세 가지 시작 방식. 얇은 테두리의 선택지를 세로로 쌓는다. */
+.modal.new-scenario {
+  max-width: 460px;
+}
+
+.new-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}
+
+.new-option {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  text-align: left;
+  color: var(--c-text);
+  transition:
+    background-color var(--dur-fast),
+    border-color var(--dur-fast);
+}
+
+.new-option:hover,
+.new-option:focus-visible {
+  background: var(--c-surface-hover);
+  border-color: var(--c-border-hover);
+}
+
+.new-option:active {
+  background: var(--c-surface-pressed);
+}
+
+.new-option__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.new-option__name {
+  display: block;
+  font-size: var(--fs-16);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+}
+
+.new-option__meta {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-14);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-tight);
+  color: var(--c-text-2);
+}
+
+.new-option svg {
+  color: var(--c-text-3);
+}

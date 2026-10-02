@@ -5,7 +5,9 @@ import {
   checkAlerts,
   finishGame,
   goToStage,
+  hasStarted,
   isOvertime,
+  isRunning,
   pause,
   remainingMs,
   resume,
@@ -28,9 +30,24 @@ const scenario = {
   ],
 };
 
-const newGame = () => startGame(scenario, 'g1', T0);
+const newGame = () => resume(startGame(scenario, 'g1', T0), T0);
 
 describe('running and pausing', () => {
+  test('a new game waits on the first stage until it is started', () => {
+    const g = startGame(scenario, 'g1', T0 - 30_000);
+    expect(isRunning(g)).toBe(false);
+    expect(hasStarted(g)).toBe(false);
+    expect(remainingMs(g, T0 + 10 * MIN)).toBe(5 * MIN);
+    const started = resume(g, T0);
+    expect(hasStarted(started)).toBe(true);
+    expect(started.startedAt).toBe(T0);
+    expect(remainingMs(started, T0 + MIN)).toBe(4 * MIN);
+    // 한 번 시작한 뒤에는 일시정지해도 시작 전으로 돌아가지 않고, 다시 시작해도 시작 시각은 그대로다.
+    const paused = pause(started, T0 + MIN);
+    expect(hasStarted(paused)).toBe(true);
+    expect(resume(paused, T0 + 2 * MIN).startedAt).toBe(T0);
+  });
+
   test('starts running on the first stage with its planned time', () => {
     const g = newGame();
     expect(g.current).toBe(0);
@@ -189,7 +206,7 @@ describe('alerts', () => {
   });
 
   test('stages of one minute or less skip the warning', () => {
-    const g = startGame({ id: null, name: '짧은', stages: [{ id: 'x', name: '짧음', durationSec: 45 }] }, 'g', T0);
+    const g = resume(startGame({ id: null, name: '짧은', stages: [{ id: 'x', name: '짧음', durationSec: 45 }] }, 'g', T0), T0);
     expect(checkAlerts(g, T0 + 1000).alerts).toEqual([]);
     expect(checkAlerts(g, T0 + 45_000).alerts).toEqual(['timeUp']);
   });

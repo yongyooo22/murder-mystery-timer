@@ -11,7 +11,6 @@ import { TrashScreen } from './screens/TrashScreen';
 
 const TITLES: Record<Route['name'], string | null> = {
   list: null,
-  detail: null,
   new: '새 시나리오',
   edit: '시나리오 편집',
   play: null, // 진행 화면은 시나리오 이름을 제목으로 쓴다
@@ -28,7 +27,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (route.name !== 'detail' && route.name !== 'list') window.scrollTo(0, 0);
+    if (route.name !== 'list') window.scrollTo(0, 0);
     // 진행 화면은 시나리오 이름을 제목으로 직접 쓴다(PlayScreen).
     if (route.name === 'play') return;
     const title = TITLES[route.name];
@@ -37,9 +36,7 @@ export function App() {
 
   return (
     <ToastProvider>
-      {(route.name === 'list' || route.name === 'detail') && (
-        <ListScreen detailId={route.name === 'detail' ? route.id : null} />
-      )}
+      {route.name === 'list' && <ListScreen />}
       {route.name === 'new' && <EditScreen key={`new:${route.template ?? ''}`} templateKey={route.template} />}
       {route.name === 'edit' && <EditScreen key={`edit:${route.id}`} scenarioId={route.id} />}
       {route.name === 'play' && <PlayScreen />}

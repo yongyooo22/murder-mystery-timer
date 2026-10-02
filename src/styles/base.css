@@ -121,6 +121,21 @@ svg {
   letter-spacing: -0.01em;
 }
 
+/*
+ * 첫 화면·새 시나리오 창: 설명·시간·단계 수·버튼·메뉴는 읽기 편한 고딕, 제목(.serif)만 명조.
+ * 버튼 모서리도 조금 더 둥글게(6px) 둔다.
+ */
+.ui-gothic {
+  --font-sans: var(--font-gothic);
+  --font-digits: var(--font-gothic);
+  font-family: var(--font-gothic);
+}
+
+.ui-gothic .btn,
+.ui-gothic .icon-btn {
+  border-radius: var(--r-md);
+}
+
 /* 앱 이름처럼 작고 자간이 넓은 영문 대문자 소제목 */
 .kicker {
   font-size: var(--fs-12);
