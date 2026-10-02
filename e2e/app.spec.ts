@@ -32,10 +32,10 @@ test('첫 사용: 빈 목록 안내와 새로 만들기·템플릿 사용', asyn
   await expect(page.getByRole('button', { name: '새로 만들기' })).toBeVisible();
   await expect(page.getByRole('button', { name: '템플릿 사용' })).toBeVisible();
 
-  await page.getByRole('button', { name: '‘3차 조사까지’ 템플릿으로 만들기' }).click();
+  await page.getByRole('button', { name: '‘조사 2회’ 템플릿으로 만들기' }).click();
   await expect(page.getByRole('heading', { name: '새 시나리오' })).toBeVisible();
   await expect(page.getByLabel('1번 단계 이름')).toHaveValue('오프닝 · 캐릭터 소개');
-  await expect(page.locator('.stage-row')).toHaveCount(9);
+  await expect(page.locator('.stage-row')).toHaveCount(7);
 });
 
 test('빠른 입력으로 만들고 저장한 뒤 열기에서 게임을 시작한다', async ({ page }) => {

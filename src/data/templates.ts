@@ -10,9 +10,23 @@ const m = (minutes: number) => minutes * 60;
 
 export const TEMPLATES: Template[] = [
   {
-    key: 'round3',
-    name: '3차 조사까지',
-    description: '조사와 토론을 세 번 진행하는 흐름',
+    key: 'investigation2',
+    name: '조사 2회',
+    description: '조사 단계가 2회인 경우',
+    stages: [
+      { name: '오프닝 · 캐릭터 소개', durationSec: m(10) },
+      { name: '1차 조사', durationSec: m(20) },
+      { name: '1차 토론', durationSec: m(15) },
+      { name: '2차 조사', durationSec: m(20) },
+      { name: '최종 토론', durationSec: m(15) },
+      { name: '범인 지목', durationSec: m(10) },
+      { name: '엔딩 · 해설', durationSec: m(10) },
+    ],
+  },
+  {
+    key: 'investigation3',
+    name: '조사 3회',
+    description: '조사 단계가 3회인 경우',
     stages: [
       { name: '오프닝 · 캐릭터 소개', durationSec: m(10) },
       { name: '1차 조사', durationSec: m(20) },
@@ -20,24 +34,6 @@ export const TEMPLATES: Template[] = [
       { name: '2차 조사', durationSec: m(20) },
       { name: '2차 토론', durationSec: m(15) },
       { name: '3차 조사', durationSec: m(15) },
-      { name: '최종 토론', durationSec: m(15) },
-      { name: '범인 지목', durationSec: m(10) },
-      { name: '엔딩 · 해설', durationSec: m(10) },
-    ],
-  },
-  {
-    key: 'round4',
-    name: '4차 조사까지',
-    description: '조사와 토론을 네 번 진행하는 흐름',
-    stages: [
-      { name: '오프닝 · 캐릭터 소개', durationSec: m(10) },
-      { name: '1차 조사', durationSec: m(20) },
-      { name: '1차 토론', durationSec: m(15) },
-      { name: '2차 조사', durationSec: m(20) },
-      { name: '2차 토론', durationSec: m(15) },
-      { name: '3차 조사', durationSec: m(20) },
-      { name: '3차 토론', durationSec: m(15) },
-      { name: '4차 조사', durationSec: m(15) },
       { name: '최종 토론', durationSec: m(15) },
       { name: '범인 지목', durationSec: m(10) },
       { name: '엔딩 · 해설', durationSec: m(10) },
