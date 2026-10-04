@@ -130,6 +130,9 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
   const [quickErrors, setQuickErrors] = useState<ParseError[]>([]);
   const [quickPending, setQuickPending] = useState<ParsedStage[] | null>(null);
   const [quickDone, setQuickDone] = useState<string | null>(null);
+  /** 시간이 없는 줄만 오류일 때, 그 줄을 빼면 만들 수 있는 단계 수 */
+  const [quickSkippable, setQuickSkippable] = useState<{ stages: number; skipped: number } | null>(null);
+  const quickSkippedRef = useRef(0);
 
   const [focusRequest, setFocusRequest] = useState<{ key: string; field: string } | null>(null);
   const [announcement, setAnnouncement] = useState('');
@@ -335,16 +338,29 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
     setQuickPending(null);
     setQuickText('');
     setQuickErrors([]);
+    const skippedNote = quickSkippedRef.current > 0 ? ` 시간이 없는 ${quickSkippedRef.current}곳은 뺐어요.` : '';
     setQuickDone(
-      mode === 'append' ? `단계 ${created.length}개를 뒤에 추가했어요.` : `단계 ${created.length}개로 바꿨어요.`,
+      (mode === 'append' ? `단계 ${created.length}개를 뒤에 추가했어요.` : `단계 ${created.length}개로 바꿨어요.`) +
+        skippedNote,
     );
     setSaveError(null);
   };
 
-  const convertQuick = () => {
+  const convertQuick = (skipUntimed = false) => {
     setQuickDone(null);
-    const { stages, errors: parseErrors } = parseQuickInput(quickText);
-    if (parseErrors.length > 0) return setQuickErrors(parseErrors);
+    setQuickSkippable(null);
+    const { stages, errors: parseErrors, skipped } = parseQuickInput(quickText, { skipUntimed });
+    quickSkippedRef.current = skipped;
+    if (parseErrors.length > 0) {
+      // 규칙서를 그대로 붙여 넣은 경우처럼 설명 문장(시간 없는 줄)만 오류면 빼고 변환할 수 있게 한다.
+      if (parseErrors.every((e) => e.untimed)) {
+        const retry = parseQuickInput(quickText, { skipUntimed: true });
+        if (retry.errors.length === 0 && retry.stages.length > 0) {
+          setQuickSkippable({ stages: retry.stages.length, skipped: retry.skipped });
+        }
+      }
+      return setQuickErrors(parseErrors);
+    }
     if (stages.length === 0) {
       return setQuickErrors([{ line: 0, text: '', message: '변환할 내용이 없어요. 한 줄에 한 단계씩 적어주세요.' }]);
     }
@@ -602,7 +618,8 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
             <div id={quickId} className="quick__panel" hidden={!quickOpen}>
               <p className="quick__help">
                 한 줄에 한 단계씩 <strong>이름</strong>과 <strong>시간</strong>을 적어 주세요. 시간은 <code>20</code>(분),{' '}
-                <code>15:30</code>(분:초), <code>7분 30초</code>처럼 쓸 수 있어요.
+                <code>15:30</code>(분:초), <code>7분 30초</code>처럼 쓸 수 있어요. <code>예배 시간 [5분]</code>처럼 괄호 안에
+                적어도 되고, <code>생각 정리 [1분] + 최후 발언 [5분]</code>처럼 +로 이으면 각각 한 단계가 돼요.
               </p>
               <div className="quick__example">
                 <p className="quick__example-title">입력 예시</p>
@@ -622,6 +639,7 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
                 onChange={(event) => {
                   setQuickText(event.target.value);
                   setQuickErrors([]);
+                  setQuickSkippable(null);
                   setQuickDone(null);
                 }}
               />
@@ -645,7 +663,12 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
                 </p>
               )}
               <div className="quick__actions">
-                <Button icon="check" onClick={convertQuick} disabled={quickText.trim() === ''}>
+                {quickSkippable && quickErrors.length > 0 && (
+                  <Button onClick={() => convertQuick(true)}>
+                    시간 없는 {quickSkippable.skipped}곳 빼고 변환 ({quickSkippable.stages}단계)
+                  </Button>
+                )}
+                <Button icon="check" onClick={() => convertQuick()} disabled={quickText.trim() === ''}>
                   단계로 변환
                 </Button>
               </div>

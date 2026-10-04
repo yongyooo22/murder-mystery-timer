@@ -275,6 +275,30 @@ test('이전 단계로 돌아가면 원래 계획 시간으로 다시 시작하�
   await expect(rows.nth(2)).toContainText('미진행');
 });
 
+test('규칙서를 그대로 붙여 넣으면 괄호 시간을 읽고, 시간 없는 줄은 빼고 변환할 수 있다', async ({ page }) => {
+  await page.goto('/#/new');
+  await page.getByRole('button', { name: /빠른 입력/ }).click();
+  await page.getByLabel('빠른 입력 내용').fill(
+    [
+      '## 게임 진행 방법',
+      '게임을 진행하기 전, Map을 꺼내어 [앞]면으로 배치한 후 내용을 숙지해주세요.',
+      '### 첫 번째 종 [20분]',
+      '[아일랜드06, 07] 카드 진행',
+      '예배 시간 [5분]',
+      '조사 시간 [5분]',
+      '밀담 및 토의 [10분]',
+      '생각 정리 [1분] + 최후 발언 [5분] + 투표',
+    ].join('\n'),
+  );
+  await page.getByRole('button', { name: '단계로 변환' }).click();
+  await expect(page.locator('.quick__errors li')).toHaveCount(3);
+  await page.getByRole('button', { name: '시간 없는 3곳 빼고 변환 (5단계)' }).click();
+  await expect(page.locator('.stage-row')).toHaveCount(5);
+  await expect(page.getByLabel('1번 단계 이름')).toHaveValue('첫 번째 종 · 예배 시간');
+  await expect(page.getByLabel('5번 단계 이름')).toHaveValue('첫 번째 종 · 최후 발언');
+  await expect(page.getByText('단계 5개로 바꿨어요. 시간이 없는 3곳은 뺐어요.')).toBeVisible();
+});
+
 test('저장하지 않은 변경 사항이 있으면 나가기 전에 확인한다', async ({ page }) => {
   await page.goto('/');
   await chooseNew(page, /직접 구성/);
