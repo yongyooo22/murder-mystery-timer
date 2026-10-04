@@ -357,7 +357,9 @@ body.is-dragging {
 
 .quick__actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: var(--sp-2);
 }
 
 /* ---------- 아래 고정 영역: 총 계획 시간 + 저장 ---------- */
