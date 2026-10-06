@@ -1,0 +1,33 @@
+/* 검색 입력칸: 왼쪽에 돋보기, 입력이 있으면 오른쪽에 지우기 버튼 */
+.search-field {
+  position: relative;
+}
+
+.search-field__icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: var(--c-text-3);
+  pointer-events: none;
+}
+
+/* 지우기 버튼(44×44)이 테두리 안에 들어가도록 일반 입력칸보다 조금 높게 둔다. */
+.search-field__input {
+  min-height: var(--h-primary);
+  padding-left: 42px;
+  padding-right: 48px;
+  appearance: none;
+}
+
+/* 브라우저 기본 지우기 단추·장식은 숨기고 아래의 지우기 버튼 하나만 쓴다. */
+.search-field__input::-webkit-search-cancel-button,
+.search-field__input::-webkit-search-decoration {
+  display: none;
+}
+
+.search-field__clear {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}

@@ -43,6 +43,8 @@ test('첫 사용: 빈 목록 안내, 새 시나리오 창에서 템플릿 선택
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /내 시나리오/ })).toBeVisible();
   await expect(page.getByText('저장된 시나리오가 없어요')).toBeVisible();
+  // 검색할 시나리오가 없으면 검색칸도 두지 않는다.
+  await expect(page.getByRole('searchbox')).toHaveCount(0);
   await expect(page.getByText('© 2026 제작: 김연경(earthssaem@gmail.com)')).toBeVisible();
 
   await page.getByRole('button', { name: '새 시나리오', exact: true }).click();
@@ -150,7 +152,9 @@ test('더보기 메뉴: 편집·복제·삭제', async ({ page, request }) => {
   await expect(page.locator('.scenario-row')).toHaveCount(2);
   await expect(page.locator('.list-head__count')).toContainText('2');
 
-  await page.getByRole('button', { name: '‘메뉴 테스트’ 더보기' }).click();
+  // 복제본이 위에 생겨 화면 아래로 밀려났을 수 있다. 메뉴는 스크롤하면 닫히므로 먼저 화면 안으로 옮겨 두고 연다.
+  await more.scrollIntoViewIfNeeded();
+  await more.click();
   await page.getByRole('menuitem', { name: '편집' }).click();
   await expect(page.getByRole('heading', { name: '시나리오 편집' })).toBeVisible();
   await page.getByLabel('시나리오 이름').fill('메뉴 테스트 수정');
@@ -162,6 +166,55 @@ test('더보기 메뉴: 편집·복제·삭제', async ({ page, request }) => {
   await page.getByRole('alertdialog', { name: '휴지통으로 옮길까요?' }).getByRole('button', { name: '휴지통으로 이동' }).click();
   await expect(page.locator('.scenario-row')).toHaveCount(1);
   await expect(page.locator('.scenario-row', { hasText: '메뉴 테스트 수정' })).toHaveCount(0);
+});
+
+test('목록 검색: 이름 일부·띄어쓰기 무시·초성으로 거르고, 결과가 없으면 전체 목록으로 돌아간다', async ({ page, request }) => {
+  await createScenario(request, '저택의 밤', [['소개', 300]]);
+  await createScenario(request, '바닷가 별장 살인', [['소개', 300]]);
+  await createScenario(request, 'Room 3', [['소개', 300]]);
+  await page.goto('/');
+  const rows = page.locator('.scenario-row');
+  const search = page.getByRole('searchbox', { name: '시나리오 이름 검색' });
+  const result = page.getByRole('status').filter({ hasText: '검색 결과' });
+  await expect(rows).toHaveCount(3);
+
+  await search.fill('저택의밤');
+  await expect(rows).toHaveText([/저택의 밤/]);
+  await expect(result).toHaveText('검색 결과 1개');
+  // 개수 표시는 전체 개수 그대로다.
+  await expect(page.locator('.list-head__count')).toContainText('3');
+
+  await search.fill('ㅂㄷ');
+  await expect(rows).toHaveText([/바닷가 별장 살인/]);
+  await search.fill('ROOM');
+  await expect(rows).toHaveText([/Room 3/]);
+
+  await search.fill('성');
+  await expect(rows).toHaveCount(0);
+  await expect(result).toHaveText('검색 결과 0개');
+  await expect(page.getByText('‘성’ 검색 결과가 없어요')).toBeVisible();
+  await page.getByRole('button', { name: '전체 목록 보기' }).click();
+  await expect(rows).toHaveCount(3);
+  await expect(search).toHaveValue('');
+  await expect(result).toHaveCount(0);
+
+  // 지우기 버튼은 검색칸으로 포커스를 돌려주고, Esc로도 지운다.
+  await search.fill('저택');
+  await page.getByRole('button', { name: '검색어 지우기' }).click();
+  await expect(search).toBeFocused();
+  await expect(rows).toHaveCount(3);
+  await search.fill('저택');
+  await search.press('Escape');
+  await expect(search).toHaveValue('');
+  await expect(rows).toHaveCount(3);
+
+  // 걸러진 목록에서 바로 실행하고, 목록으로 돌아오면 전체 목록부터 보여 준다.
+  await search.fill('별장');
+  await runScenario(page, '바닷가 별장 살인');
+  await expect(page.locator('.play-brand__name')).toHaveText('바닷가 별장 살인');
+  await page.goBack();
+  await expect(search).toHaveValue('');
+  await expect(rows).toHaveCount(3);
 });
 
 test('타이머: 일시정지, ±1분, 다음 단계 확인, 시간 초과, 마지막 단계 마치기, 결과', async ({ page, request }) => {

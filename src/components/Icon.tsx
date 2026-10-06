@@ -8,6 +8,7 @@ const ICONS = {
   plus: [{ d: 'M12 5v14M5 12h14' }],
   minus: [{ d: 'M5 12h14' }],
   close: [{ d: 'M6 6l12 12M18 6 6 18' }],
+  search: [{ cx: 10.5, cy: 10.5, r: 6 }, { d: 'M15 15l5 5' }],
   more: [
     { cx: 5, cy: 12, r: 1.5, fill: true },
     { cx: 12, cy: 12, r: 1.5, fill: true },
