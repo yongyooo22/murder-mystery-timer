@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button, IconButton } from '../components/Button';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
 import { InlineAlert } from '../components/InlineAlert';
 import { Menu } from '../components/Menu';
+import { SearchField } from '../components/SearchField';
 import { Spinner } from '../components/Spinner';
 import { useToast } from '../components/Toast';
 import { TopBar } from '../components/TopBar';
@@ -23,6 +24,7 @@ import { useGameStore } from '../game/gameStore';
 import { useStartGame } from '../game/useStartGame';
 import { quotedObject } from '../lib/korean';
 import { navigate } from '../lib/router';
+import { matchesSearch, searchTerms } from '../lib/search';
 import { durationText, sumDurationSec, timeOfDayText } from '../lib/time';
 import { NewScenarioDialog } from './NewScenarioDialog';
 import { SettingsModal } from './SettingsModal';
@@ -42,6 +44,10 @@ export function ListScreen() {
   const [trashBusy, setTrashBusy] = useState(false);
   const [trashError, setTrashError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // 검색어는 이 화면에 있는 동안만 둔다(다른 화면에 다녀오면 전체 목록부터 보여 준다).
+  const [query, setQuery] = useState('');
+  const searching = searchTerms(query).length > 0;
+  const shown = useMemo(() => list.items.filter((it) => matchesSearch(it.name, query)), [list.items, query]);
 
   const onDuplicate = async (scenario: Scenario) => {
     setActionError(null);
@@ -108,6 +114,16 @@ export function ListScreen() {
             </Button>
           </div>
 
+          {hasList && list.items.length > 0 && (
+            <SearchField
+              label="시나리오 이름 검색"
+              placeholder="이름 또는 초성으로 검색"
+              className="list-search"
+              value={query}
+              onChange={setQuery}
+            />
+          )}
+
           {hasList && offline && (
             <InlineAlert
               tone="offline"
@@ -160,9 +176,19 @@ export function ListScreen() {
               </div>
             )}
 
-            {hasList && list.items.length > 0 && (
+            {hasList && list.items.length > 0 && shown.length === 0 && (
+              <div className="list-empty">
+                <p className="list-empty__title">‘{query.trim()}’ 검색 결과가 없어요</p>
+                <p className="list-empty__body">초성(예: ㅈㅌ → 저택)으로도 찾을 수 있어요.</p>
+                <Button size="sm" className="list-empty__action" onClick={() => setQuery('')}>
+                  전체 목록 보기
+                </Button>
+              </div>
+            )}
+
+            {shown.length > 0 && (
               <ul className="scenario-list">
-                {list.items.map((scenario) => (
+                {shown.map((scenario) => (
                   <ScenarioRow
                     key={scenario.id}
                     scenario={scenario}
@@ -177,6 +203,11 @@ export function ListScreen() {
               </ul>
             )}
           </div>
+
+          {/* 입력할 때마다 걸러진 개수를 화면 낭독기에 알린다(목록 자체가 보이는 결과다). */}
+          <p className="visually-hidden" role="status">
+            {hasList && list.items.length > 0 && searching ? `검색 결과 ${shown.length}개` : ''}
+          </p>
 
           <div className="list-foot">
             <SyncStatus list={list} />

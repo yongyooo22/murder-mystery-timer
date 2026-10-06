@@ -281,6 +281,14 @@ async function run() {
     await page.reload();
     await page.waitForSelector('.scenario-row');
     await shot('list-many');
+
+    // 검색: 많은 목록에서 거르기, 결과 없음
+    const search = page.getByRole('searchbox', { name: '시나리오 이름 검색' });
+    await search.fill('시나리오 1');
+    await shot('list-search');
+    await search.fill('없는 이름');
+    await page.waitForSelector('.list-empty');
+    await shot('list-search-empty');
     await page.unroute('**/api/scenarios');
 
     // 설정

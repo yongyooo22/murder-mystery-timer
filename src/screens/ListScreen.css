@@ -64,7 +64,7 @@
   padding-right: var(--sp-5);
 }
 
-/* ---------- 목록 머리: 내 시나리오(개수) · 새 시나리오 ---------- */
+/* ---------- 목록 머리: 내 시나리오(개수) · 새 시나리오 · 검색 ---------- */
 
 .list-head {
   display: flex;
@@ -96,6 +96,11 @@
   flex-shrink: 0;
   padding-left: var(--sp-5);
   padding-right: var(--sp-5);
+}
+
+/* 목록 위 검색칸: 목록 면과 같은 너비 */
+.list-search {
+  margin-bottom: var(--sp-3);
 }
 
 .list-alert {
@@ -203,10 +208,11 @@
   }
 }
 
-/* 빈 목록 */
+/* 빈 목록·검색 결과 없음 */
 .list-empty {
   padding: var(--sp-10) var(--sp-5);
   text-align: center;
+  text-wrap: balance;
 }
 
 .list-empty__title {
@@ -219,6 +225,10 @@
   margin-top: var(--sp-1);
   font-size: var(--fs-15);
   color: var(--c-text-2);
+}
+
+.list-empty__action {
+  margin-top: var(--sp-4);
 }
 
 /* ---------- 목록 아래: 새로고침·갱신 시각 | 휴지통 ---------- */

@@ -123,7 +123,7 @@ svg {
 
 /*
  * 첫 화면·새 시나리오 창: 설명·시간·단계 수·버튼·메뉴는 읽기 편한 고딕, 제목(.serif)만 명조.
- * 버튼 모서리도 조금 더 둥글게(6px) 둔다.
+ * 버튼·입력칸 모서리도 조금 더 둥글게(6px) 둔다.
  */
 .ui-gothic {
   --font-sans: var(--font-gothic);
@@ -132,7 +132,8 @@ svg {
 }
 
 .ui-gothic .btn,
-.ui-gothic .icon-btn {
+.ui-gothic .icon-btn,
+.ui-gothic .input {
   border-radius: var(--r-md);
 }
 
