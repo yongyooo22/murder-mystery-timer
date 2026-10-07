@@ -98,9 +98,22 @@
   padding-right: var(--sp-5);
 }
 
-/* 목록 위 검색칸: 목록 면과 같은 너비 */
-.list-search {
+/* 목록 위 도구 줄: 검색칸(남는 너비 전부) + 정렬 버튼. 둘 다 높이 48px */
+.list-tools {
+  display: flex;
+  gap: var(--sp-2);
   margin-bottom: var(--sp-3);
+}
+
+.list-tools__search {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-tools__sort {
+  flex-shrink: 0;
+  min-height: var(--h-primary);
+  white-space: nowrap;
 }
 
 .list-alert {

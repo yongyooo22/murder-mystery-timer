@@ -282,6 +282,16 @@ async function run() {
     await page.waitForSelector('.scenario-row');
     await shot('list-many');
 
+    // 정렬 메뉴 → 가나다순(이 기기에 저장되므로 점검 뒤 기본 정렬로 되돌린다)
+    const sortButton = page.getByRole('button', { name: /^정렬 기준/ });
+    await sortButton.click();
+    await page.waitForSelector('.menu');
+    await shot('list-sort-menu');
+    await page.getByRole('menuitemradio', { name: '가나다순' }).click();
+    await shot('list-sorted');
+    await sortButton.click();
+    await page.getByRole('menuitemradio', { name: '최근 수정순' }).click();
+
     // 검색: 많은 목록에서 거르기, 결과 없음
     const search = page.getByRole('searchbox', { name: '시나리오 이름 검색' });
     await search.fill('시나리오 1');

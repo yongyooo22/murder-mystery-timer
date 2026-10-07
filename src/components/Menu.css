@@ -25,6 +25,16 @@
   color: var(--c-text-3);
 }
 
+/* 여럿 중 고른 항목: 오른쪽 끝에 체크 표시, 글자는 조금 굵게 */
+.menu__item[aria-checked='true'] {
+  font-weight: var(--fw-semibold);
+}
+
+.menu__item .menu__check {
+  margin-left: auto;
+  color: var(--c-text);
+}
+
 .menu__item:hover:not(:disabled),
 .menu__item:focus-visible {
   background: var(--c-surface-hover);
