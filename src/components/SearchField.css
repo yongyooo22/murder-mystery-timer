@@ -20,6 +20,12 @@
   appearance: none;
 }
 
+/* 비어 있을 때는 지우기 버튼이 없으므로 안내 문구가 오른쪽 끝까지 쓴다. */
+.search-field__input:placeholder-shown {
+  padding-right: 12px;
+  text-overflow: ellipsis;
+}
+
 /* 브라우저 기본 지우기 단추·장식은 숨기고 아래의 지우기 버튼 하나만 쓴다. */
 .search-field__input::-webkit-search-cancel-button,
 .search-field__input::-webkit-search-decoration {

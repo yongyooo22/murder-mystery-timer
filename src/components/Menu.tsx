@@ -1,26 +1,37 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { IconButton } from './Button';
+import { Button, IconButton } from './Button';
 import { Icon, type IconName } from './Icon';
 import './Menu.css';
 
 export type MenuItem =
-  | { type?: 'item'; label: string; icon?: IconName; tone?: 'danger'; onSelect: () => void; disabled?: boolean }
+  | {
+      type?: 'item';
+      label: string;
+      icon?: IconName;
+      tone?: 'danger';
+      onSelect: () => void;
+      disabled?: boolean;
+      /** 주어지면 여럿 중 하나를 고르는 항목(menuitemradio)으로 그리고, 고른 항목에 체크 표시를 한다. */
+      checked?: boolean;
+    }
   | { type: 'separator' };
 
 interface MenuProps {
-  /** 더보기 버튼의 접근 가능한 이름. 예: ‘저택의 밤’ 더보기 */
+  /** 더보기 버튼과 펼친 메뉴의 접근 가능한 이름. 예: ‘저택의 밤’ 더보기 */
   label: string;
   items: MenuItem[];
   /** 펼친 메뉴에 붙일 클래스(예: 글꼴을 바꾸는 ui-gothic) */
   className?: string;
+  /** 더보기(⋯) 아이콘 대신 아이콘 + 글자 버튼으로 연다. 버튼의 이름은 buttonLabel(없으면 label). */
+  trigger?: { icon: IconName; text: ReactNode; buttonLabel?: string; className?: string };
 }
 
 const MENU_WIDTH = 220;
 const VIEWPORT_MARGIN = 8;
 
 /** 더보기(⋯) 버튼과 펼침 메뉴 */
-export function Menu({ label, items, className }: MenuProps) {
+export function Menu({ label, items, className, trigger }: MenuProps) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -51,10 +62,14 @@ export function Menu({ label, items, className }: MenuProps) {
     }
   }, [open]);
 
-  // 위치를 잡아 메뉴가 보이게 된 뒤에 첫 항목으로 포커스를 옮긴다(숨겨진 동안에는 포커스할 수 없다).
+  // 위치를 잡아 메뉴가 보이게 된 뒤에 고른 항목(없으면 첫 항목)으로 포커스를 옮긴다(숨겨진 동안에는 포커스할 수 없다).
   const shown = open && position !== null;
   useEffect(() => {
-    if (shown) menuRef.current?.querySelector<HTMLButtonElement>('button:not([disabled])')?.focus({ preventScroll: true });
+    if (!shown || !menuRef.current) return;
+    const target =
+      menuRef.current.querySelector<HTMLButtonElement>('button[aria-checked="true"]:not([disabled])') ??
+      menuRef.current.querySelector<HTMLButtonElement>('button:not([disabled])');
+    target?.focus({ preventScroll: true });
   }, [shown]);
 
   useEffect(() => {
@@ -94,17 +109,29 @@ export function Menu({ label, items, className }: MenuProps) {
     };
   }, [open]);
 
+  const triggerProps = {
+    ref: triggerRef,
+    'aria-haspopup': 'menu' as const,
+    'aria-expanded': open,
+    'aria-controls': open ? menuId : undefined,
+    onClick: () => setOpen((v) => !v),
+  };
+
   return (
     <>
-      <IconButton
-        ref={triggerRef}
-        icon="more"
-        label={label}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={open ? menuId : undefined}
-        onClick={() => setOpen((v) => !v)}
-      />
+      {trigger ? (
+        <Button
+          {...triggerProps}
+          icon={trigger.icon}
+          className={trigger.className}
+          aria-label={trigger.buttonLabel ?? label}
+          title={trigger.buttonLabel ?? label}
+        >
+          {trigger.text}
+        </Button>
+      ) : (
+        <IconButton {...triggerProps} icon="more" label={label} />
+      )}
       {open &&
         createPortal(
           <div
@@ -128,7 +155,8 @@ export function Menu({ label, items, className }: MenuProps) {
                 <button
                   key={item.label}
                   type="button"
-                  role="menuitem"
+                  role={item.checked === undefined ? 'menuitem' : 'menuitemradio'}
+                  aria-checked={item.checked}
                   className={['menu__item', item.tone === 'danger' && 'menu__item--danger'].filter(Boolean).join(' ')}
                   disabled={item.disabled}
                   onClick={() => {
@@ -138,6 +166,7 @@ export function Menu({ label, items, className }: MenuProps) {
                 >
                   {item.icon && <Icon name={item.icon} size={20} />}
                   <span>{item.label}</span>
+                  {item.checked && <Icon name="check" size={20} className="menu__check" />}
                 </button>
               ),
             )}

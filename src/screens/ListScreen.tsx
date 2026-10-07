@@ -18,6 +18,8 @@ import {
   useScenarioList,
   type ScenarioListState,
 } from '../data/scenarioStore';
+import { SCENARIO_SORTS, sortLabel, sortScenarios } from '../data/scenarioSort';
+import { updateSettings, useSettings } from '../data/settingsStore';
 import type { Scenario } from '../data/types';
 import { hasStarted, isOvertime, isRunning } from '../game/engine';
 import { useGameStore } from '../game/gameStore';
@@ -47,7 +49,12 @@ export function ListScreen() {
   // 검색어는 이 화면에 있는 동안만 둔다(다른 화면에 다녀오면 전체 목록부터 보여 준다).
   const [query, setQuery] = useState('');
   const searching = searchTerms(query).length > 0;
-  const shown = useMemo(() => list.items.filter((it) => matchesSearch(it.name, query)), [list.items, query]);
+  // 정렬 기준은 이 기기에 저장해 다음에 열 때도 그대로 쓴다.
+  const { listSort } = useSettings();
+  const shown = useMemo(
+    () => sortScenarios(list.items.filter((it) => matchesSearch(it.name, query)), listSort),
+    [list.items, query, listSort],
+  );
 
   const onDuplicate = async (scenario: Scenario) => {
     setActionError(null);
@@ -115,13 +122,30 @@ export function ListScreen() {
           </div>
 
           {hasList && list.items.length > 0 && (
-            <SearchField
-              label="시나리오 이름 검색"
-              placeholder="이름 또는 초성으로 검색"
-              className="list-search"
-              value={query}
-              onChange={setQuery}
-            />
+            <div className="list-tools">
+              <SearchField
+                label="시나리오 이름 검색"
+                placeholder="이름·초성 검색"
+                className="list-tools__search"
+                value={query}
+                onChange={setQuery}
+              />
+              <Menu
+                label="정렬 기준"
+                className="ui-gothic"
+                trigger={{
+                  icon: 'sort',
+                  text: sortLabel(listSort),
+                  buttonLabel: `정렬 기준: ${sortLabel(listSort)}`,
+                  className: 'list-tools__sort',
+                }}
+                items={SCENARIO_SORTS.map((option) => ({
+                  label: option.label,
+                  checked: option.value === listSort,
+                  onSelect: () => updateSettings({ listSort: option.value }),
+                }))}
+              />
+            </div>
           )}
 
           {hasList && offline && (

@@ -217,6 +217,60 @@ test('목록 검색: 이름 일부·띄어쓰기 무시·초성으로 거르고,
   await expect(rows).toHaveCount(3);
 });
 
+test('목록 정렬: 최근 수정순·최근 만든순·가나다순·시간순으로 바꾸고, 고른 기준은 이 기기에 남는다', async ({ page, request }) => {
+  // 만든 순서: 저택의 밤 → Room 3 → 가면 무도회. 마지막에 저택의 밤을 고쳐 최근 수정순 맨 위로 올린다.
+  const pause = () => new Promise((resolve) => setTimeout(resolve, 20));
+  const mansion = await createScenario(request, '저택의 밤', [['소개', 3600]]);
+  await pause();
+  await createScenario(request, 'Room 3', [['소개', 900]]);
+  await pause();
+  await createScenario(request, '가면 무도회', [['소개', 1800]]);
+  await pause();
+  await request.patch(`/api/scenarios/${mansion.id}`, { data: { name: '저택의 밤' } });
+
+  await page.goto('/');
+  const names = page.locator('.scenario-row__name');
+  const sortButton = page.getByRole('button', { name: /^정렬 기준/ });
+  const menu = page.getByRole('menu', { name: '정렬 기준' });
+  const choose = async (label: string) => {
+    await sortButton.click();
+    await menu.getByRole('menuitemradio', { name: label }).click();
+    await expect(sortButton).toHaveAccessibleName(`정렬 기준: ${label}`);
+  };
+
+  await expect(names).toHaveText(['저택의 밤', '가면 무도회', 'Room 3']);
+  await expect(sortButton).toHaveAccessibleName('정렬 기준: 최근 수정순');
+
+  // 메뉴는 고른 항목에 체크 표시를 하고 그 항목에서 키보드 포커스를 시작한다.
+  await sortButton.click();
+  await expect(menu.getByRole('menuitemradio')).toHaveText(['최근 수정순', '최근 만든순', '가나다순', '짧은 시간순', '긴 시간순']);
+  await expect(menu.getByRole('menuitemradio', { checked: true })).toHaveText('최근 수정순');
+  await expect(menu.getByRole('menuitemradio', { name: '최근 수정순' })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await expect(menu).toHaveCount(0);
+  await expect(sortButton).toBeFocused();
+  await expect(sortButton).toHaveAccessibleName('정렬 기준: 최근 만든순');
+  await expect(names).toHaveText(['가면 무도회', 'Room 3', '저택의 밤']);
+
+  await choose('짧은 시간순');
+  await expect(names).toHaveText(['Room 3', '가면 무도회', '저택의 밤']);
+  await choose('긴 시간순');
+  await expect(names).toHaveText(['저택의 밤', '가면 무도회', 'Room 3']);
+
+  // 가나다순: 한글 ㄱㄴㄷ 다음 영문. 검색으로 거른 결과에도 같은 순서를 쓴다.
+  await choose('가나다순');
+  await expect(names).toHaveText(['가면 무도회', '저택의 밤', 'Room 3']);
+  await page.getByRole('searchbox', { name: '시나리오 이름 검색' }).fill('ㅁ ㄷ');
+  await expect(names).toHaveText(['가면 무도회']);
+  await page.getByRole('button', { name: '검색어 지우기' }).click();
+
+  // 다시 열어도 마지막으로 고른 정렬 그대로다.
+  await page.reload();
+  await expect(sortButton).toHaveAccessibleName('정렬 기준: 가나다순');
+  await expect(names).toHaveText(['가면 무도회', '저택의 밤', 'Room 3']);
+});
+
 test('타이머: 일시정지, ±1분, 다음 단계 확인, 시간 초과, 마지막 단계 마치기, 결과', async ({ page, request }) => {
   await createScenario(request, '흐름 테스트', [
     ['소개', 300],

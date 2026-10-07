@@ -1,6 +1,7 @@
 import { STORAGE_KEYS, readJson, writeJson } from '../lib/storage';
 import { createStore, useStore } from '../lib/store';
 import { api, errorMessage } from './api';
+import { byUpdatedDesc } from './scenarioSort';
 import type { Scenario, ScenarioInput } from './types';
 
 export type LoadStatus = 'loading' | 'ready' | 'offline';
@@ -20,8 +21,6 @@ interface CachedList {
   items: Scenario[];
   syncedAt: number;
 }
-
-const byUpdatedDesc = (a: Scenario, b: Scenario) => b.updatedAt.localeCompare(a.updatedAt);
 
 function initialState(): ScenarioListState {
   const cached = readJson<CachedList>(STORAGE_KEYS.scenarios);
