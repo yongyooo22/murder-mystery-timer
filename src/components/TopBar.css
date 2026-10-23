@@ -50,3 +50,16 @@
   text-transform: uppercase;
   color: var(--c-text);
 }
+
+/* 오른쪽에 전체화면·설정 두 버튼이 있으므로 오른쪽 여백을 버튼 안 여백에 맡긴다. */
+.topbar--brand .topbar__title {
+  padding-right: 0;
+}
+
+/* 좁은 세로 휴대폰(360px~)에서도 앱 이름이 잘리지 않게 글자 간격과 크기를 조금 줄인다. */
+@media (max-width: 479px) {
+  .topbar--brand .topbar__title {
+    font-size: clamp(16px, 4.4vw, 23px);
+    letter-spacing: 0.04em;
+  }
+}
