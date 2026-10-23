@@ -5,6 +5,7 @@ import { EmptyState } from '../components/EmptyState';
 import { InlineAlert } from '../components/InlineAlert';
 import { Spinner } from '../components/Spinner';
 import { useToast } from '../components/Toast';
+import { FullscreenButton } from '../components/FullscreenButton';
 import { TopBar } from '../components/TopBar';
 import { ApiError, api, errorMessage } from '../data/api';
 import { restoreScenario } from '../data/scenarioStore';
@@ -85,9 +86,12 @@ export function TrashScreen() {
         left={<IconButton icon="arrow-left" label="뒤로" onClick={() => goBack({ name: 'list' })} />}
         title="휴지통"
         right={
-          <Button size="sm" variant="ghost" icon="refresh" loading={state.status === 'loading'} onClick={load}>
-            새로고침
-          </Button>
+          <>
+            <Button size="sm" variant="ghost" icon="refresh" loading={state.status === 'loading'} onClick={load}>
+              새로고침
+            </Button>
+            <FullscreenButton />
+          </>
         }
       />
       <main className="screen__body">

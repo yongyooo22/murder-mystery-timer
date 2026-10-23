@@ -66,6 +66,12 @@ const doc = () => document as FullscreenDocument;
 export const fullscreenSupported = () =>
   typeof document !== 'undefined' && Boolean(doc().fullscreenEnabled ?? doc().webkitFullscreenEnabled);
 
+/** 홈 화면에 추가한 앱으로 열려 있으면 이미 주소창·탭이 없다. */
+export const isStandaloneApp = () =>
+  typeof window !== 'undefined' &&
+  (window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true);
+
 const fullscreenElement = () => doc().fullscreenElement ?? doc().webkitFullscreenElement ?? null;
 
 /** 전체화면을 쓸 수 없는 브라우저(예: iPhone Safari)에서는 supported가 false다. */

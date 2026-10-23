@@ -7,6 +7,7 @@ import { InlineAlert } from '../components/InlineAlert';
 import { Spinner } from '../components/Spinner';
 import { FieldError, TextField } from '../components/TextField';
 import { useToast } from '../components/Toast';
+import { FullscreenButton } from '../components/FullscreenButton';
 import { TopBar } from '../components/TopBar';
 import { ApiError, errorMessage } from '../data/api';
 import {
@@ -59,6 +60,7 @@ export function EditScreen({ scenarioId, templateKey }: EditScreenProps) {
       <TopBar
         left={<IconButton icon="arrow-left" label="뒤로" onClick={back} />}
         title="시나리오 편집"
+        right={<FullscreenButton />}
       />
       <main className="screen__body">
         {list.status === 'loading' ? (
@@ -484,6 +486,7 @@ function ScenarioEditor({ scenario, template }: { scenario?: Scenario; template?
       <TopBar
         left={<IconButton icon="arrow-left" label="뒤로" onClick={requestBack} />}
         title={scenarioId ? '시나리오 편집' : '새 시나리오'}
+        right={<FullscreenButton />}
       />
 
       {/* 가로 화면: 왼쪽 이름·단계 목록, 오른쪽 총 계획 시간·저장과 빠른 입력(EditScreen.css) */}

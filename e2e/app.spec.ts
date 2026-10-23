@@ -729,3 +729,21 @@ test('시간 초과에서도 숫자·단계 이름·버튼 위치가 그대로�
     }
   }
 });
+
+test('전체화면: 목록에서 켜면 다른 화면으로 가도 이어지고, 어느 화면에서든 끌 수 있다', async ({ page, request }) => {
+  await createScenario(request, '저택의 밤', [['오프닝', 300]]);
+  await page.goto('/');
+  const isFullscreen = () => page.evaluate(() => document.fullscreenElement !== null);
+
+  await page.getByRole('button', { name: '전체화면', exact: true }).click();
+  await expect.poll(isFullscreen).toBe(true);
+  await expect(page.getByRole('button', { name: '전체화면 끝내기' })).toBeVisible();
+
+  // 화면을 옮겨도(같은 페이지 안의 해시 이동) 전체화면은 유지되고, 버튼도 그 상태를 보여 준다.
+  await page.getByRole('button', { name: '‘저택의 밤’ 실행' }).click();
+  await expect(page.locator('.play-status__label')).toHaveText('시작 전');
+  expect(await isFullscreen()).toBe(true);
+  await page.getByRole('button', { name: '전체화면 끝내기' }).click();
+  await expect.poll(isFullscreen).toBe(false);
+  await expect(page.getByRole('button', { name: '전체화면', exact: true })).toBeVisible();
+});

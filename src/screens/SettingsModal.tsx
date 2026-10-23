@@ -3,7 +3,7 @@ import { Modal } from '../components/Modal';
 import { Switch } from '../components/Switch';
 import { APP_CONFIG } from '../config';
 import { updateSettings, useSettings } from '../data/settingsStore';
-import { vibrate, vibrationSupported, wakeLockSupported } from '../lib/device';
+import { fullscreenSupported, isStandaloneApp, vibrate, vibrationSupported, wakeLockSupported } from '../lib/device';
 import { playAlert, soundSupported } from '../lib/sound';
 import './SettingsModal.css';
 
@@ -12,6 +12,8 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
   const canVibrate = vibrationSupported();
   const canKeepAwake = wakeLockSupported();
   const canPlay = soundSupported();
+  // 전체화면 버튼이 없는 브라우저(예: iPhone Safari)에서만 주소창을 없애는 다른 방법을 알려 준다.
+  const showHomeScreenTip = !fullscreenSupported() && !isStandaloneApp();
 
   return (
     <Modal open={open} onClose={onClose} title="설정" showClose className="modal--wide">
@@ -66,6 +68,12 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             disabled={!canKeepAwake}
             onChange={(keepAwake) => updateSettings({ keepAwake })}
           />
+          {showHomeScreenTip && (
+            <p className="settings__note">
+              이 브라우저에서는 전체화면을 쓸 수 없어요. 공유 버튼에서 ‘홈 화면에 추가’를 누른 뒤 홈 화면 아이콘으로 열면
+              주소창과 탭 없이 볼 수 있어요.
+            </p>
+          )}
 
           <h3 className="settings__heading">저장 위치</h3>
           <p className="settings__note">

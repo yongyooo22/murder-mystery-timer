@@ -7,6 +7,7 @@ import { Menu } from '../components/Menu';
 import { SearchField } from '../components/SearchField';
 import { Spinner } from '../components/Spinner';
 import { useToast } from '../components/Toast';
+import { FullscreenButton } from '../components/FullscreenButton';
 import { TopBar } from '../components/TopBar';
 import { APP_CONFIG } from '../config';
 import { errorMessage } from '../data/api';
@@ -99,7 +100,12 @@ export function ListScreen() {
       <TopBar
         variant="brand"
         title={<span lang="en">{APP_CONFIG.name}</span>}
-        right={<IconButton icon="settings" label="설정" size={20} onClick={() => setSettingsOpen(true)} />}
+        right={
+          <>
+            <FullscreenButton />
+            <IconButton icon="settings" label="설정" size={20} onClick={() => setSettingsOpen(true)} />
+          </>
+        }
       />
 
       <main className="screen__body list-body">

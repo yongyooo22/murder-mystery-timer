@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties
 import { Button, IconButton } from '../components/Button';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
+import { FullscreenButton } from '../components/FullscreenButton';
 import { Icon, type IconName } from '../components/Icon';
 import { APP_CONFIG } from '../config';
 import { settingsStore, updateSettings, useSettings, type Settings } from '../data/settingsStore';
@@ -27,7 +28,7 @@ import {
   type GameState,
 } from '../game/engine';
 import { endGame, gameStore, updateGame, useGameStore } from '../game/gameStore';
-import { useFullscreen, useWakeLock, vibrate } from '../lib/device';
+import { useWakeLock, vibrate } from '../lib/device';
 import { navigate } from '../lib/router';
 import { playAlert, soundSupported } from '../lib/sound';
 import { clockText, durationText, remainingSummaryText, timerText } from '../lib/time';
@@ -92,7 +93,6 @@ let soundBeforeMute: Pick<Settings, 'timeUpSound' | 'warningSound'> | null = nul
 
 function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boolean }) {
   const settings = useSettings();
-  const fullscreen = useFullscreen();
   const canPlaySound = soundSupported();
   const routeId = useId();
   const [now, setNow] = useState(() => Date.now());
@@ -316,14 +316,7 @@ function PlayView({ game, persistFailed }: { game: GameState; persistFailed: boo
             onClick={toggleSound}
           />
         )}
-        {fullscreen.supported && (
-          <IconButton
-            icon={fullscreen.active ? 'minimize' : 'maximize'}
-            label={fullscreen.active ? '전체화면 끝내기' : '전체화면'}
-            size={20}
-            onClick={() => void fullscreen.toggle()}
-          />
-        )}
+        <FullscreenButton />
       </div>
 
       {/* 오른쪽(가로) · 가운데(세로): 현재 단계, 남은 시간, 조작 */}
